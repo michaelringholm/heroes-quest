@@ -1,0 +1,9 @@
+{
+    "name": "atv",
+    "displayName": "Access Token Validator",
+    "version": "0.1.2",
+    "dependencies": {
+    "aws-sdk": "^2.815.0",
+    "uuid": "^3.3.2"
+    }
+}

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+	<link rel="stylesheet" href="./resources/css/xmas-game.css" type="text/css">	
+	
+	<script type="text/javascript" src="./resources/js/lib/jquery-2.2.2.min.js"></script>
+	<script type="text/javascript" src="./resources/js/lib/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="./resources/js/sound-player.js"></script>
+	<script type="text/javascript" src="./resources/js/html-include.js"></script>		
+	<script type="text/javascript" src="./resources/js/login-view.js?001"></script>
+	<script type="text/javascript" src="./resources/js/xmas-game.js"></script>
+</head>
+<body>
+
+<div id="container" class="container-fluid" tabindex='100'>
+
+	<img id="muteSound" src="./resources/images/mute-48.png" class="commandButton active" style="position: absolute; top: 14rem; left: 1rem; width: 24px; height: 24px;">
+	<img id="toggleDebug" src="./resources/images/bug-48.png" class="commandButton active" style="position: absolute; top: 14rem; left: 4rem; width: 24px; height: 24px;">
+
+	<div id="loginContainer" class="function row" style="height: 160px; top:22rem;">
+		<div style="margin-top: 10px;; margin-left: 10px;">
+			<div style="margin: 4px;"><div class="label">Login:</div><input id="login" type="text" value=""/></div>
+			<div style="margin: 4px;"><div class="label">Password:</div><input id="password" type="password" value="" /></div>
+			<div style="color: red; text-align: left; margin-left: 124px;" id="loginStatus"></div>
+			<div id="btnLogin" class="btn" style="background-color: green; margin-left: 124px;">Login</div>
+			<div id="btnShowCreateLogin" style="margin-left: 124px; text-decoration: underline; cursor:pointer;">Create new login</div>
+		</div>
+	</div>
+	
+	<div id="createLoginContainer" class="function" style="height: 160px; top:22rem;display: none;">
+		<div style="margin-top: 10px;; margin-left: 10px;">
+			<div style="margin: 4px;"><div class="label" style="width: 220px;">New login:</div><input id="newLogin" type="text" value=""/></div>
+			<div style="margin: 4px;"><div class="label" style="width: 220px;">New Password:</div><input id="newPassword" type="password" value="" /></div>
+			<div style="margin: 4px;"><div class="label" style="width: 220px;">Repeated Password:</div><input id="newRepeatedPassword" type="password" value="" /></div>
+
+			<div id="btnCreateLogin" class="btn" style="background-color: green;">Create Login</div>
+			<div id="statusMessage" class="label"></div>
+		</div>			
+	</div>
+
+	
+	<div id="highScoreContainer" class="function" style="display:none; height: 56rem; width:70rem; top: 1rem;">		
+		<div style="margin-top: 4px; ">
+            <div class="row headerRow" style="margin-left: 2px; margin-right: 2px; border-radius: 4px;">
+                <div class="col-sm-9">Name</div>
+                <div class="col-sm-3">Score</div>
+			</div>
+			<div id="highScoreItems"></div>
+		</div>
+		<!-- Templates -->
+        <div id="highscoreItemTemplate" class="row template highscoreItem" style="margin-left: 2px; margin-right: 2px; height: 4rem; line-height: 4rem;">
+            <div class="col-sm-9 highScoreName" style="font-size: 4rem;">[Name]</div>
+            <div class="col-sm-3 highScoreScore" style="font-size: 4rem;">[Score]</div>
+        </div>
+	</div>
+
+	<div id="rewardsContainer" class="function" style="display:none; height: 56rem; width:70rem; top: 1rem;">		
+		<div style="margin-top: 4px;">
+            <div class="row headerRow" style="margin-left: 2px; margin-right: 2px; border-radius: 4px;">
+                <div class="col-sm-4">Card</div>
+				<div class="col-sm-4">Amount</div>
+				<div class="col-sm-4">Special</div>
+			</div>
+			<div id="rewardItems"></div>
+		</div>
+		<!-- Templates -->
+        <div id="rewardItemTemplate" class="row template rewardItem">
+            <div class="col-sm-4">
+				<img class="rewardImage" src="./resources/images/xmas/deer.jpg" style="margin-left:2px;">
+				<img class="rewardImage" src="./resources/images/xmas/deer.jpg">
+				<img class="rewardImage" src="./resources/images/xmas/deer.jpg">
+			</div>
+			<div class="col-sm-4 rewardAmount">[Amount]</div>
+			<div class="col-sm-4 rewardSpecial">[Special]</div>
+        </div>
+	</div>	
+	
+	<div id="cardContainer" class="function" style="display:none; height: 32rem; width:70rem; top: 22rem;">		
+		<div style="margin-top: 10px; margin-left: 10px;">
+			<div class="row cards">					
+			</div>
+		</div>
+		<!-- Templates -->
+		<div class="hero-card template col">
+			<div class="card" style="width: 18rem; height: 28rem;">
+				<img src="" class="card-img-top" style="height: 16rem;" alt="Warrior">
+				<div class="card-body" style="height: 12rem;">
+					<h5 class="card-title hero-name">Hero</h5>
+					<p class="card-text hero-text">Description</p>
+				</div>
+			</div>
+		</div>
+		<div class="hero-card-empty template col">
+			<div class="card" style="width: 18rem; height: 28rem;">
+				<img src="./resources/images/card-backside2.jpg" class="card-img-top" style="height: 28rem;" alt="Empty">
+			</div>
+		</div>
+	</div>
+
+	<div id="createHeroContainer" class="function" style="display:none; height: 180px; width: 800px;">
+		<div style="margin-top: 10px;">
+			<div class="label">Hero name:</div><input id="newHeroName" value="Krom"/>
+			<div id="btnCreateHero" class="button">Create Hero</div>
+		</div>
+	</div>
+	
+	<div id="battleContainer" class="function" style="display:none;">
+		<img id="battleHeroContainer" style="width: 25rem;  position: absolute; top: 5rem; left: 5rem;"></img>
+		<div id="heroName" class="label" style="position: absolute; width: 22rem; text-align:left; top: 7rem; left: 5.5rem; z-index: 3;"></div>
+		<div id="heroHP" class="label" style="position: absolute; width: 22rem; text-align:left; top: 8.7rem; left: 5.5rem; z-index: 3;"></div>		
+		<div id="heroStatus" class="label" style="width: 21rem;  position: absolute; top: 32rem; left: 7rem;"></div>
+		
+		<img id="battleMobContainer" style="width: 25rem; position: absolute; top: 5rem; right: 5rem;"></img>		
+		<div id="mobName" class="label" style="position: absolute; width:22rem; text-align:left; top: 7rem; right: 7rem; z-index: 3;"></div>
+		<div id="mobHP" class="label" style="position: absolute; width: 22rem; text-align:left; top: 8.7rem; right: 7rem; z-index: 3;"></div>
+		<div id="mobStatus" class="label" style="width: 21rem; text-align:left; position: absolute; top: 32rem; right: 7rem;"></div>		
+	</div>
+
+	<div id="topToolbar" class="function topToolbar container-fluid">
+		<div class="row">
+			<div class="col">
+				<div class="row align-items-center" style="height: 10rem; line-height: 10rem;">
+					<div class="col-sm-4">
+						<div id="score" style="font-size: 7rem">0</div>
+					</div>
+					<div class="col-sm-4">
+						<div id="totalScore" style="font-size: 7rem">0</div>
+					</div>
+					<div class="col-sm-4">
+						<div data-turns-used="0" data-max-turns="0" id="turnsUsed" style="font-size: 7rem">0/0</div>
+					</div>
+				</div>
+				<div class="row align-items-center" style="height: 2rem; line-height: 2rem; margin-top:-2rem;">
+					<div class="col-sm-4">
+						<div style="font-size: 1rem">Score</div>
+					</div>
+					<div class="col-sm-4">
+						<div style="font-size: 1rem">Total Score</div>
+					</div>
+					<div class="col-sm-4">
+						<div style="font-size: 1rem">Turns Used</div>
+					</div>
+				</div>				
+			</div>
+		</div>
+	</div>	
+	
+	<div id="bottomToolbar" class="function bottomToolbar container-fluid">
+		<div class="row">
+			<div class="col"></div>
+			<div class="col-md-auto">
+				<div class="row align-items-center" style="height: 6rem;">
+					<div class="col">
+						<img class="commandButton active img-fluid" src="./resources/images/xmas/play-round-128.png" data-action="playRound" style="margin-left: 4px;" alt="ability1">
+					</div>
+					<div class="col">
+						<img class="commandButton active img-fluid" src="./resources/images/xmas/rewards-128.png" data-action="showRewards" style="margin-left: 4px;" alt="ability1">
+					</div>
+					<div class="col">
+						<img class="commandButton active img-fluid" src="./resources/images/xmas/highscore-128.png" data-action="showHighScore" style="margin-left: 4px;" alt="ability1">
+					</div>
+					<div class="col">
+						<img class="commandButton img-fluid" src="./resources/images/lock-button-128.png" data-action="restart" style="margin-left: 4px;" alt="ability1">
+					</div>
+					<div class="col">
+						<img class="commandButton img-fluid" src="./resources/images/lock-button-128.png" data-action="todo" style="margin-left: 4px;" alt="ability1">
+					</div>
+				</div>
+			</div>
+			<div class="col"></div>
+		</div>
+	</div>
+	
+	<!-- OVERLAYS -->
+	<div id="gameOverTextOverlay" class="function" style="display:none; width: 70rem; height: 16rem; font-size: 8rem; background-color: rgba(182, 10, 10, 0.7); text-align: center; top:0; bottom:0; line-height: 16rem;">Game Over</div>
+
+	<div id="characterScreenOverlay" class="function" style="display:none; width: 560px; height: 108px; font-size: 20px; top: 40px; left: 40px; margin: 0px;"></div>
+	<div id="characterScreen" class="function" style="display:none; width: 860px; height: 698px; font-size: 20px; background-color: transparent;">
+		<div style="position: absolute;left: 0px; top: 0px;" class="heroName"></div>
+		<div style="position: absolute;left: 0px; top: 20px;" class="heroLevel"></div>
+		<div style="position: absolute;left: 0px; top: 40px;" class="heroHP"></div>
+		<div style="position: absolute;left: 0px; top: 60px;" class="heroMoney"></div>
+		<div class="characterItemContainerMetaData" style="left: 10px; top: 160px;"></div>
+		<div class="characterItemContainer itemContainer" style="left: 140px; top: 160px;"></div>		
+		<div class="characterItemContainerMetaData" style="left: 10px; top: 300px;"></div>
+		<div class="characterItemContainer itemContainer" style="left: 140px; top: 300px;"></div>
+		<div class="characterItemContainerMetaData" style="left: 10px; top: 440px;"></div>		
+		<div class="characterItemContainer itemContainer" style="left: 140px; top: 440px;"></div>
+		<div class="characterItemContainerMetaData" style="right: 50px; top: 160px;"></div>
+		<div class="characterItemContainer itemContainer" style="right: 200px; top: 160px;"></div>
+		<div class="characterItemContainerMetaData" style="right: 50px; top: 300px;"></div>
+		<div class="characterItemContainer itemContainer" style="right: 200px; top: 300px;"></div>
+		<div class="characterItemContainerMetaData" style="right: 50px; top: 440px;"></div>
+		<div class="characterItemContainer itemContainer" style="right: 200px; top: 440px;"></div>
+	</div>	
+	<div id="deathScreenTextOverlay" class="function" style="display:none; width: 760px; height: 68px; font-size: 20px;"></div>
+	<div id="trasureScreenTextOverlay" class="container overlay" style="display:none; color:#fdf75a; background-color: #1f1907a6; top:5rem; position: absolute;">
+		<div class="row align-items-center justify-content-center">
+			<div class="col-8" style="text-align: center; font-size: 4rem;">
+				You won the battle!
+			</div>
+		</div>
+		<div class="row align-items-center justify-content-center" style="margin-top:2rem;">			
+			<div class="col text-center">
+				<img class="img-fluid commandButton" src="./resources/images/xmas/deer.jpg">
+				<div  id="xpEarned">10 xp</div>
+			</div>
+			<div class="col text-center">
+				<img class="img-fluid commandButton" src="./resources/images/xmas/deer.jpg">
+				<div id="copperLooted">5 cp</div>
+			</div>
+		</div>
+		<div id="lootText" class="row" style="margin-top:2rem;">
+			<div class="col text-center" style="font-size: 2rem;">You found items while searching the corpse!</div>
+		</div>
+		<div id="lootedItems" class="row align-items-center justify-content-center" style="margin-top:1rem; margin-bottom: 3rem;">			
+			<div class="col template lootedItem text-center">
+				<img class="lootedItemImg img-fluid commandButton active" src="./resources/images/xmas/deer.jpg">
+				<div class="lootedItemName">Looted Item</div>
+			</div>
+		</div>	
+	</div>	
+
+	<!-- DEBUG VIEWS -->
+	<div id="debugInfo" style="display:none; position: fixed; z-index: 1000; top: 10px; right: 10px; width: 360px; height: 240px; margin: 0px; overflow: auto; background-color: rgba(0,0,0,0.7); color: rgb(70, 184, 17); border:solid 2px green; font-family: midgaardConsoleFont; font-size: 10pt;"></div>
+	<div id="jsonInfo" style="display:none; position: fixed; z-index: 1000; bottom: 10px; right: 10px; width: 660px; height: 240px; margin: 0px; overflow: auto; background-color: rgba(0,0,0,0.7); color: rgb(70, 184, 17); border:solid 2px green; font-family: midgaardConsoleFont; font-size: 10pt;"></div>
+	
+	<!-- CAVAS LAYERS -->
+	<canvas id="canvasLayer1" style="display: none"></canvas>
+	<canvas id="canvasLayer2" style="display: none"></canvas>
+</div>
+
+<!--
+<div id="gSessionId"></div>
+<div id="login"></div>
+<div id="he"></div>
+<div id="status"></div>
+
+
+
+<div class="function">
+	<div id="btnMove" class="button">Move</div>
+	<select id="direction">
+		<option value="west">west</option>
+		<option value="north">north</option>
+		<option value="east">east</option>
+		<option value="south">south</option>
+	</select>
+	<div id="btnEnterTown" class="button" style="margin-left: 40px;">Enter town</div>
+	<div id="btnLeaveTown" class="button" style="margin-left: 2px;">Leave town</div>
+</div>
+
+
+-->
+
+
+<div id="images" style="display: none;">
+	
+</div>
+
+</body>
+</html>

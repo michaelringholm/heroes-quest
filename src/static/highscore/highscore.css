@@ -1,0 +1,18 @@
+.template {
+    display: none;
+}
+
+#highscoreWidget {
+    width: 600px;
+}
+
+.headerRow {
+    border: 1px solid black;
+}
+
+.evenRow {
+    background-color: rgb(204, 202, 202);
+}
+.oddRow {
+    background-color: rgb(133, 133, 133);
+}
