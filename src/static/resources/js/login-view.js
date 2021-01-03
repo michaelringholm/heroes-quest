@@ -9,13 +9,13 @@ $(function() {
 function LoginView() {
     var _this = this;
     var LOGIN_URL = "https://1r5188ua7k.execute-api.eu-north-1.amazonaws.com/login-fn";
-    var CREATE_LOGIN_URL = "https://x45nyh9mub.execute-api.eu-north-1.amazonaws.com/DEV/xmas-fun-user-login";
+    var CREATE_LOGIN_URL = "https://a95r6wbcca.execute-api.eu-north-1.amazonaws.com/create-login-fn";
     var maxHeroes = 3;
     var heroView = new HeroView();
     var welcomeMusic = {};
 
     this.createLogin = function() {
-        var newClientLogin = {name:$("#newLogin").val(), password:$("#newPassword").val(), repeatedPassword:$("#newRepeatedPassword").val()};
+        var newClientLogin = {userName:$("#newLogin").val(), password:$("#newPassword").val(), passwordRepeated:$("#newRepeatedPassword").val()};
         post(CREATE_LOGIN_URL, newClientLogin, _this.createLoginSuccess, _this.createLoginFailed);
     };
     
@@ -23,7 +23,7 @@ function LoginView() {
         logInfo("create login OK!");
         logInfo(JSON.stringify(data));
         $("#statusMessage").html("");
-        drawLoginScreen();
+        _this.drawLoginScreen();
     };
     
     this.createLoginFailed = function(errorMsg) {

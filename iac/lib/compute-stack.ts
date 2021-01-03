@@ -24,7 +24,7 @@ export class ComputeStack extends Core.Stack {
 
         this.apiRole = this.buildAPIRole();
         this.createLoginFunction(apiSecurityGroup, vpc);
-        //this.createStatusFunction();
+        this.createCreateLoginFunction(apiSecurityGroup, vpc);
         //this.createUpdateStatusFunction();
     }
 
@@ -36,14 +36,10 @@ export class ComputeStack extends Core.Stack {
             tracing: Lambda.Tracing.ACTIVE,
         });
         
-        /*var apiEventSource = new ApiEventSource("POST", "/" + name, {
-           apiKeyRequired: false,
-        });*/
-        //lambdaFunction.addEventSource(apiEventSource);
         const proxyIntegration = new LambdaProxyIntegration({
             handler: lambdaFunction,
-          });
-          
+            });
+            
         const httpApi = new HttpApi(this, MetaData.PREFIX+name+"-api");
         
         httpApi.addRoutes({
@@ -60,8 +56,8 @@ export class ComputeStack extends Core.Stack {
         return this.createLambdaFunction(apiSecurityGroup, "login-fn", "index.handler", "../src/api/login", vpc);
     }
 
-    private createStatusFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
-        return this.createLambdaFunction(apiSecurityGroup, "status-fn", "index.mainHandler", "assets/status-api", vpc);
+    private createCreateLoginFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
+        return this.createLambdaFunction(apiSecurityGroup, "create-login-fn", "index.handler", "../src/api/create-login", vpc);
     }
 
     private createUpdateStatusFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {

@@ -1,6 +1,8 @@
 const AWS = require("aws-sdk");
 const UUID = require('uuid');
 const MAX_TURNS = 50;
+const LOGIN_TABLE_NAME = "om-hq-login";
+const HERO_TABLE_NAME = "om-hq-hero"
 
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
@@ -15,6 +17,9 @@ exports.handler = function(event, context, callback) {
 
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var login = JSON.parse(event.body);
+    if(login.userName == null || login.password == null || login.passwordRepeated == null) {
+        console.error("login.userName, password or repeatedPassword was missing!"); respondError(500, "Failed to create login(0)", callback); 
+    }
     
     getLogin(login.userName, (err, data) => {
         if(err) { console.error(err); respondError(500, "Failed to create login(1)", callback); }
@@ -26,7 +31,7 @@ exports.handler = function(event, context, callback) {
                 createLogin(login, (err,data) => {
                     if(err) { console.error(err); respondError(500, "Failed to create login(2)", callback); }
                     else {
-                        insertInitialScore(data.userGuid, (err) => {
+                        insertInitialData(data.userGuid, (err) => {
                             if(err) { console.error(err); respondError(500, "Failed to create login(3)", callback); }
                             else respondOK(data, callback);
                         })                        
@@ -41,7 +46,7 @@ function createLogin(login, callback) {
     var userGuid = UUID.v4();
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var params = {
-        TableName: 'xmas-fun-login',
+        TableName: LOGIN_TABLE_NAME,
         Item: {
           'userName': {S: login.userName},
           'userGuid': {S: userGuid},
@@ -60,14 +65,13 @@ function createLogin(login, callback) {
     });    
 }
 
-function insertInitialScore(userGuid, callback) {
+function insertInitialData(userGuid, callback) {
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var params = {
-        TableName: 'xmas-fun-score',
+        TableName: HERO_TABLE_NAME,
         Item: {
           'userGuid': {S: userGuid},
-          'score': {N: "0"},
-          'turnsUsed': {N: "0"}
+          'heroGuids': {SS: []}
         },
         ReturnConsumedCapacity: "TOTAL", 
         //ProjectionExpression: 'ATTRIBUTE_NAME'
@@ -86,7 +90,7 @@ function getLogin(userName, callback) {
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     
     var params = {
-      TableName: 'xmas-fun-login',
+      TableName: LOGIN_TABLE_NAME,
       Key: {
         'userName': {S: userName}
       },
