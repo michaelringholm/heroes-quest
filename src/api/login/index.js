@@ -1,6 +1,9 @@
 const AWS = require("aws-sdk");
 const UUID = require('uuid');
 const MAX_TURNS = 50;
+const LOGIN_TABLE_NAME = "om-hq-login";
+const HERO_TABLE_NAME = "om-hq-hero"
+const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
@@ -19,7 +22,7 @@ exports.handler = function(event, context, callback) {
     var login = JSON.parse(event.body);
     
     var params = {
-      TableName: 'xmas-fun-login',
+      TableName: LOGIN_TABLE_NAME,
       Key: {
         'userName': {S: login.userName}
       },
@@ -40,7 +43,7 @@ exports.handler = function(event, context, callback) {
                     updateToken(login, userData.Item.userGuid.S, ddb, function(err, tokenData) {
                         if (err) { console.log(err); respondError(origin, 500, err, callback); }
                         else {
-                            getUserScore(userData.Item.userGuid.S, function(scoreData) {
+                            getHeroInfo(userData.Item.userGuid.S, function(scoreData) {
                                 scoreData.maxTurns = MAX_TURNS;
                                 scoreData.accessToken = tokenData.accessToken;
                                 scoreData.userGuid = tokenData.userGuid;
@@ -61,7 +64,7 @@ exports.handler = function(event, context, callback) {
 function updateToken(login, userGuid, ddb, callback) {
     var newToken = UUID.v4();
     var params = {
-        TableName: 'xmas-fun-login',
+        TableName: LOGIN_TABLE_NAME,
         Item: {
           'userName': {S: login.userName},
           'userGuid': {S: userGuid},
@@ -78,12 +81,12 @@ function updateToken(login, userGuid, ddb, callback) {
     });    
 }
 
-function getUserScore(userGuid, callback) {
+function getHeroInfo(userGuid, callback) {
     //AWS.config.update({region: 'eu-central-1'});
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     
     var params = {
-      TableName: 'xmas-fun-score',
+      TableName: HERO_TABLE_NAME,
       Key: {
         'userGuid': {S: userGuid}
       },
@@ -103,7 +106,7 @@ function getUserScore(userGuid, callback) {
 
 function preFlightResponse(origin, referer, callback) {
     var tweakedOrigin = "";
-    if(origin == "http://localhost" || origin == "http://xmas-fun.s3-website.eu-north-1.amazonaws.com")
+    if(origin == ALLOWED_ORIGINS[0] || origin == ALLOWED_ORIGINS[1])
         tweakedOrigin = origin;
 
     const response = {
@@ -120,7 +123,7 @@ function preFlightResponse(origin, referer, callback) {
 
 function respondOK(origin, data, callback) {
     var tweakedOrigin = "";
-    if(origin == "http://localhost" || origin == "http://xmas-fun.s3-website.eu-north-1.amazonaws.com")
+    if(origin == ALLOWED_ORIGINS[0] || origin == ALLOWED_ORIGINS[1])
         tweakedOrigin = origin;
 
     const response = {
@@ -139,7 +142,7 @@ function respondOK(origin, data, callback) {
 
 function respondError(origin, errorCode, errorMessage, callback) {
     var tweakedOrigin = "";
-    if(origin == "http://localhost" || origin == "http://xmas-fun.s3-website.eu-north-1.amazonaws.com")
+    if(origin == ALLOWED_ORIGINS[0] || origin == ALLOWED_ORIGINS[1])
         tweakedOrigin = origin;
 
     const response = {

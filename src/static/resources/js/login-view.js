@@ -1,14 +1,14 @@
 var loginView = {};
 $(function() {	
     loginView = new LoginView();
-    $("#btnShowCreateLogin").click(function() {login.drawCreateLoginScreen();});	
-	$("#btnCreateLogin").click(function() {login.createLogin();});	
+    $("#btnShowCreateLogin").click(function() {loginView.drawCreateLoginScreen();});	
+	$("#btnCreateLogin").click(function() {loginView.createLogin();});	
     $("#btnLogin").click(function() {loginView.login();});
 });
 
 function LoginView() {
     var _this = this;
-    var LOGIN_URL = "https://x45nyh9mub.execute-api.eu-north-1.amazonaws.com/DEV/xmas-fun-user-login";
+    var LOGIN_URL = "https://1r5188ua7k.execute-api.eu-north-1.amazonaws.com/login-fn";
     var CREATE_LOGIN_URL = "https://x45nyh9mub.execute-api.eu-north-1.amazonaws.com/DEV/xmas-fun-user-login";
     var maxHeroes = 3;
     var heroView = new HeroView();
@@ -16,7 +16,7 @@ function LoginView() {
 
     this.createLogin = function() {
         var newClientLogin = {name:$("#newLogin").val(), password:$("#newPassword").val(), repeatedPassword:$("#newRepeatedPassword").val()};
-        post(CREATE_LOGIN_URL, newClientLogin, createLoginSuccess, createLoginFailed);
+        post(CREATE_LOGIN_URL, newClientLogin, _this.createLoginSuccess, _this.createLoginFailed);
     };
     
     this.createLoginSuccess = function(data) {
@@ -33,7 +33,7 @@ function LoginView() {
     
     this.login = function() {
         welcomeMusic = soundPlayer.playSound("./resources/sounds/bard-intro.wav");
-        var clientLogin = {name:$("#login").val(), password:$("#password").val()};
+        var clientLogin = {userName:$("#login").val(), password:$("#password").val()};
         //callMethod("http://" + hostIp + ":" + hostPort, "login", clientLogin, loginSuccess, loginFailed);
         post(LOGIN_URL, clientLogin, loginSuccess, loginFailed);
     };

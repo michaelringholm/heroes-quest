@@ -48,7 +48,7 @@ export class ComputeStack extends Core.Stack {
         
         httpApi.addRoutes({
         path: "/" + name,
-        methods: [ HttpMethod.POST ],
+        methods: [ HttpMethod.POST, HttpMethod.OPTIONS ],
         integration: proxyIntegration,
         });
         
@@ -89,7 +89,7 @@ export class ComputeStack extends Core.Stack {
         role.addToPolicy(new IAM.PolicyStatement({
           effect: IAM.Effect.ALLOW,
           resources: ["*"],
-          actions: ["secretsmanager:GetSecretValue","dbqms:*","rds-data:*","xray:*"]
+          actions: ["secretsmanager:GetSecretValue","dbqms:*","rds-data:*","xray:*","dynamodb:GetItem","dynamodb:PutItem"]
         }));
 
         Core.Tags.of(role).add(MetaData.NAME, MetaData.PREFIX+"api-role");

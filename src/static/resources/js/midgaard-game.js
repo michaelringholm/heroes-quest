@@ -64,6 +64,10 @@ function printJson(json) {
 	$("#jsonInfo").html(json);
 }
 
+function logDebug(msg) {
+	$("#debugInfo").prepend("[INFO]: " + msg + "<br/>");
+} 
+
 function logInfo(msg) {
 	$("#status").prepend("[INFO]: " + msg + "<br/>");
 } 
@@ -71,7 +75,7 @@ function logInfo(msg) {
 function logError(msg) {
 	$("#status").prepend("[ERROR]: " + msg + "<br/>");
 	console.error(msg);
-} 
+}  
 
 function getMobImgSrc(mob) {
 	var imgSrc = null;
