@@ -1,4 +1,4 @@
-functionName=xmas-fun-user-login
+functionName=om-hq-user-login
 clear
 echo Compressing function code...
 #zip -rq drop.zip .

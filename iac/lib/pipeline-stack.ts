@@ -21,14 +21,14 @@ export class PipelineStack extends Core.Stack {
         this.createS3BuildBucket();
         var codeBuildProjectServiceRole = this.buildCodeBuildProjectServiceRole();
         var codeDeployServiceRole = this.buildCodeDeployServiceRole();
-        this.buildPipelineServiceRole();
+        var pipelineServiceRole = this.buildPipelineServiceRole();
         var codeDeployApplication = this.createCodeDeployApplication();
         var deploymentGroup = this.createCodeDeployApplicationDeploymentGroup(codeDeployServiceRole, codeDeployApplication);
         this.createBuildProject(codeBuildProjectServiceRole);
         var artifact = this.createArtifact();
         var sourceAction = this.createSourceAction(artifact);
         var deployAction = this.createDeployAction(artifact, deploymentGroup);
-        this.createPipeline(sourceAction, deployAction);
+        this.createPipeline(pipelineServiceRole, sourceAction, deployAction);
     }
 
     private createSourceAction(artifact: Artifact): GitHubSourceAction {
@@ -69,14 +69,15 @@ export class PipelineStack extends Core.Stack {
         return artifact;
     }
     
-    private createPipeline(sourceAction: GitHubSourceAction, deployAction: CodeDeployServerDeployAction) {
+    private createPipeline(pipelineServiceRole: IAM.IRole, sourceAction: GitHubSourceAction, deployAction: CodeDeployServerDeployAction) {
         var name = MetaData.PREFIX+"pipeline";
         var pipeline = new Pipeline(this, name, {
             pipelineName: name,
             stages: [
                 { stageName: "Source", actions: [ sourceAction ] },
                 { stageName: "Deploy", actions: [ deployAction ] }
-            ]
+            ],
+            role: pipelineServiceRole
         });
         /*{
                             actionProperties: {

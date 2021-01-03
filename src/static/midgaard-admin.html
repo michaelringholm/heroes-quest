@@ -1,0 +1,91 @@
+<html>
+<head>
+	<link rel="stylesheet" href="./midgaard-admin.css" type="text/css">	
+	
+	<script type="text/javascript" src="./jquery-2.2.2.min.js"></script>
+	<script type="text/javascript" src="./midgaard-admin.js"></script>
+</head>
+<body>
+
+<h1>Admin screen</h1>
+
+<div class="function">
+	<div id="btnCreateLogin" class="button">Create Login</div>
+	<label>newLogin:</label><input id="newLogin" type="text" value="MyLogin"/>
+	<label>newPassword:</label><input id="newPassword" type="password" value="MyPassword"/>
+	<label>newRepeatedPassword:</label><input id="newRepeatedPassword" type="password" value="MyPassword" />
+</div>
+
+<div class="function">
+	<div id="btnLogin" class="button">Login</div>
+	<label>Login:</label><input id="login" type="text" value="MyLogin"/>
+	<label>Password:</label><input id="password" type="password" value="MyPassword" />
+</div>
+
+<div class="function">
+	<div id="btnCreateHero" class="button">Create Hero</div>
+	<label>Hero name:</label><input id="newHeroName" type="text" value="Krom"/>
+</div>
+
+<div class="function">
+	<div id="btn-choose-hero" class="button">Choose Hero</div>
+	<select id="heroList">
+		<option disabled selected>Choose your hero</option>
+	</select>
+</div>
+
+<div class="function">
+	<div id="btnMove" class="button">Move</div>
+	<select id="direction">
+		<option value="west">west</option>
+		<option value="north">north</option>
+		<option value="east">east</option>
+		<option value="south">south</option>
+	</select>
+	<div id="btnEnterTown" class="button" style="margin-left: 40px;">Enter town</div>
+	<div id="btnLeaveTown" class="button" style="margin-left: 2px;">Leave town</div>
+</div>
+
+<div class="function">
+	<div id="btnVisitMeadhall" class="button" style="margin-left: 40px;">Visit meadhall</div>
+	<div id="btnVisitSmithy" class="button" style="margin-left: 40px;">Visit smithy</div>	
+	<div id="btnViewCharacter" class="button" style="margin-left: 2px;">View character</div>
+	<div id="btnTrain" class="button" style="margin-left: 2px;">Train</div>
+</div>
+
+<div class="function">
+	<div id="btnNextRound" class="button">Next Round</div>
+	<select id="attackType">
+		<option value="melee">Melee</option>
+		<option value="healing I">Healing I</option>
+		<option value="weakness I">Weakness I</option>
+		<option value="strength I">Strength I</option>
+	</select>
+</div>
+
+<hr/>
+<div id="gSessionId"></div>
+<div id="login"></div>
+<div id="he"></div>
+<div id="container" tabindex='100'>
+	<canvas id="canvasLayer1"></canvas>
+	<canvas id="canvasLayer2"></canvas>
+</div>
+<div id="status"></div>
+
+<div id="images" style="display: none;">
+	<img id="forest" src="./resources/images/forest.png" >
+	<img id="mountains" src="./resources/images/mountains-brown.png">
+	<img id="road" src="./resources/images/road.png">
+	<img id="town" src="./resources/images/town.png">
+	<img id="heroMapIcon" src="./resources/images/viking.png">
+	<img id="warriorHero" src="./resources/images/warrior-hero.png">
+	<img id="wildBoar" src="./resources/images/wild-boar.png">
+	<img id="dead" src="./resources/images/card-dead.png">
+	<img id="orc" src="./resources/images/orc.png">
+	<img id="town" src="./resources/images/town.jpg">
+	<img id="loot" src="./resources/images/loot.jpg">	
+</div>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+	"a":{"mobs":[{"name":"Rabbit", "level":"1", "hp":"8", "ac":"1", probability":"1", "xp":"30", "copper":"2", "items":[], "minAtk":"1", "maxAtk":"2"}]},
+	"b":{"mobs":[{"name":"Beetle", "level":"1", "hp":"5", "ac":"5", "probability":"1", "xp":"40", "copper":"12", "items":[], "minAtk":"1", "maxAtk":"2"}]},
+	"c":{"mobs":[{"name":"Spider", "level":"1", "hp":"6", "ac":"2", "mana":"5", probability":"1", "xp":"50", "copper":"8", "items":[], "minAtk":"1", "maxAtk":"2", "spells":["Poison I"]}]},
+	"d":{"mobs":[{"name":"Fox", "level":"1", "hp":"14", "ac":"2", "probability":"1", "xp":"60", "copper":"5", "items":[], "minAtk":"1", "maxAtk":"2"}]},
+	"x":{"mobs":[{"name":"Hymer", "level":"100", "hp":"1400", "ac":"200", "probability":"100", "xp":"50000", "copper":"120000", "items":[], "minAtk":"50", "maxAtk":"250"}]},
+	"y":{"mobs":[{"name":"Mimer", "level":"50", "hp":"625", "ac":"90", "probability":"100", "xp":"15000", "copper":"20000", "items":[], "minAtk":"20", "maxAtk":"100"}]},
+	"z":{"mobs":[{"name":"Muspel", "level":"70", "hp":"1000", "ac":"130", "probability":"100", "xp":"24000", "copper":"40000", "items":[], "minAtk":"40", "maxAtk":"125"}]},
+	"-":{"mobs":[]}
+}
