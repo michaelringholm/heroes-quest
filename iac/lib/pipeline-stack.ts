@@ -10,8 +10,9 @@ import { Server } from "http";
 import { PipelineProject, Project } from "@aws-cdk/aws-codebuild";
 import { ActionCategory, Artifact, Pipeline } from "@aws-cdk/aws-codepipeline";
 import { Action } from "@aws-cdk/aws-ec2";
-import { CodeCommitSourceAction, CodeDeployEcsDeployAction, CodeDeployServerDeployAction, CodeDeployServerDeployActionProps, GitHubSourceAction } from "@aws-cdk/aws-codepipeline-actions";
+import { CodeCommitSourceAction, CodeDeployEcsDeployAction, CodeDeployServerDeployAction, CodeDeployServerDeployActionProps, GitHubSourceAction, GitHubTrigger } from "@aws-cdk/aws-codepipeline-actions";
 import { SecretValue } from "@aws-cdk/core";
+import * as SM from '@aws-cdk/aws-secretsmanager';
 
 export class PipelineStack extends Core.Stack {
     constructor(scope: Core.Construct, id: string, props?: Core.StackProps) {
@@ -25,19 +26,30 @@ export class PipelineStack extends Core.Stack {
         var deploymentGroup = this.createCodeDeployApplicationDeploymentGroup(codeDeployServiceRole, codeDeployApplication);
         this.createBuildProject(codeBuildProjectServiceRole);
         var artifact = this.createArtifact();
-        var sourceAction = this.createSourceAction();
+        var sourceAction = this.createSourceAction(artifact);
         var deployAction = this.createDeployAction(artifact, deploymentGroup);
         this.createPipeline(sourceAction, deployAction);
     }
 
-    private createSourceAction(): GitHubSourceAction {
+    private createSourceAction(artifact: Artifact): GitHubSourceAction {
+        // Remember:
+        // 1) is the Token saved in plaintext (NOT a JSON key-value!)?
+        // 2) is the repo private? Because if so, you need to give your token appropriate permissions
+        // 3) worst comes to worst, you can change trigger to GitHubTrigger.POLL when creating GitHubSourceAction
+        // https://docs.aws.amazon.com/codepipeline/latest/userguide/appendix-github-oauth.html#GitHub-create-personal-token-CLI
+        // https://gitter.im/awslabs/aws-cdk?at=5e1f9ae18b5d766da1b03575
+        //var name = MetaData.PREFIX+"oauth-secret";
+        var name = MetaData.PREFIX+"pat";
+        var secret = SM.Secret.fromSecretNameV2(this, name, name);
+        console.log("secret=" + secret.secretValue.toString()); // TEMP OUTPUT
         var deployAction = new GitHubSourceAction({
             actionName: "GetSource",
-            repo: "simple-java-bootstrap-app",
+            repo: "heroes-quest",
             branch: "main",
-            owner: "sundgaard-aws",
-            oauthToken: new SecretValue("asdasd"),
-            output: new Artifact()
+            owner: "michaelringholm",
+            oauthToken: secret.secretValue,
+            trigger: GitHubTrigger.POLL,
+            output: artifact                        
         });
         return deployAction;
     }    
