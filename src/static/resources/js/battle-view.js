@@ -10,7 +10,7 @@ $(function() {
 
 function BattleView() {
     var _this = this;
-    var heroView = new HeroView();
+    //var heroView = new HeroView();
     var deathCard = "./resources/images/battle/card-dead.png";
 
     /*this.handleEvent = function(commandButton) {

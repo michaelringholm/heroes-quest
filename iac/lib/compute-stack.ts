@@ -25,6 +25,7 @@ export class ComputeStack extends Core.Stack {
         this.apiRole = this.buildAPIRole();
         this.createLoginFunction(apiSecurityGroup, vpc);
         this.createCreateLoginFunction(apiSecurityGroup, vpc);
+        this.createCreateHeroFunction(apiSecurityGroup, vpc);
         //this.createUpdateStatusFunction();
     }
 
@@ -59,6 +60,11 @@ export class ComputeStack extends Core.Stack {
     private createCreateLoginFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
         return this.createLambdaFunction(apiSecurityGroup, "create-login-fn", "index.handler", "../src/api/create-login", vpc);
     }
+
+    private createCreateHeroFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
+        return this.createLambdaFunction(apiSecurityGroup, "create-hero-fn", "index.handler", "../src/api/create-hero", vpc);
+    }
+
 
     private createUpdateStatusFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
         return this.createLambdaFunction(apiSecurityGroup, "update-status-api-lam", "index.mainHandler", "assets/update-status-api/", vpc);

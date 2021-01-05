@@ -16,7 +16,7 @@ exports.handler = function(event, context, callback) {
     console.log("method="+method);
 
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    var login = JSON.parse(event.body);
+    var hero = JSON.parse(event.body);
     if(login.userName == null || login.password == null || login.passwordRepeated == null) {
         console.error("login.userName, password or repeatedPassword was missing!"); respondError(500, "Failed to create login(0)", callback); 
     }
@@ -30,28 +30,22 @@ exports.handler = function(event, context, callback) {
             else {
                 createLogin(login, (err,data) => {
                     if(err) { console.error(err); respondError(500, "Failed to create login(2)", callback); }
-                    else {
-                        insertInitialData(data.userGuid, (err) => {
-                            if(err) { console.error(err); respondError(500, "Failed to create login(3)", callback); }
-                            else respondOK(data, callback);
-                        })                        
-                    }
+                    else respondOK(data, callback);
                 });
             }
         }
     });
 };
 
-function createLogin(login, callback) {
+function createLogin(hero, callback) {
     var userGuid = UUID.v4();
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var params = {
-        TableName: LOGIN_TABLE_NAME,
+        TableName: HERO_TABLE_NAME,
         Item: {
-          'userName': {S: login.userName},
-          'userGuid': {S: userGuid},
-          'password': {S: login.password},
-          'accessToken': {S: ""}
+          'userGuid': {S: hero.userGuid},
+          'heroName': {S: hero.heroName},
+          'heroClass': {S: hero.HeroClass}
         },
         ReturnConsumedCapacity: "TOTAL", 
         //ProjectionExpression: 'ATTRIBUTE_NAME'
@@ -59,28 +53,8 @@ function createLogin(login, callback) {
     ddb.putItem(params, function(err, userData) {
         if (err) { console.log(err); callback(err, null); }
         else {       
-            console.log("User created");
+            console.log("Hero created");
             callback(null, { "userGuid": userGuid });
-        }
-    });    
-}
-
-function insertInitialData(userGuid, callback) {
-    var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    var params = {
-        TableName: HERO_TABLE_NAME,
-        Item: {
-          'userGuid': {S: userGuid}
-          //'heroGuids': {SS: []}
-        },
-        ReturnConsumedCapacity: "TOTAL", 
-        //ProjectionExpression: 'ATTRIBUTE_NAME'
-    };    
-    ddb.putItem(params, function(err, userData) {
-        if (err) { console.error(err); callback(err); }
-        else {       
-            console.log("Inserted initial score");
-            callback(null);
         }
     });    
 }

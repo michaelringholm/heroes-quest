@@ -11,8 +11,8 @@
 	<script type="text/javascript" src="./resources/js/sound-player.js"></script>
 	<script type="text/javascript" src="./resources/js/html-include.js"></script>	
 	<script type="text/javascript" src="./resources/js/midgaard-game.js"></script>	
-	<script type="text/javascript" src="./resources/js/battle-view.js"></script>
 	<script type="text/javascript" src="./resources/js/hero-view.js"></script>
+	<script type="text/javascript" src="./resources/js/battle-view.js"></script>	
 	<script type="text/javascript" src="./resources/js/login-view.js"></script>
 	<script type="text/javascript" src="./resources/js/map-view.js"></script>
 	<script type="text/javascript" src="./resources/js/smithy-view.js"></script>
@@ -51,6 +51,7 @@
 			</div>
 		</div>
 		<!-- Templates -->
+		<!-- https://www.pngfind.com/mpng/hibJiii_silhouette-ork-fighter-warrior-fantasy-silhouette-hd-png/ -->
 		<div class="hero-card template col">
 			<div class="card" style="width: 18rem; height: 28rem;">
 				<img src="" class="card-img-top" style="height: 16rem;" alt="Warrior">
@@ -70,7 +71,7 @@
 	<div id="createHeroContainer" class="function" style="display:none; height: 180px; width: 800px;">
 		<div style="margin-top: 10px;">
 			<div class="label">Hero name:</div><input id="newHeroName" value="Krom"/>
-			<div id="btnCreateHero" class="button">Create Hero</div>
+			<div id="btnCreateHero" class="btn" style="background-color: green; margin-left: 124px;">Create Hero</div>
 		</div>
 	</div>
 	
@@ -115,6 +116,32 @@
 	<!-- MAP -->
 	<!--<div w3-include-html="map-toolbar.html"></div>-->
 	<!--<div id="mapHtmlPlaceholder"><iframe id="test" src="map-toolbar.html" style="z-index: -100;"></iframe></div>-->
+	<div id="loginBottomToolbar" class="function bottomToolbar container-fluid">
+		<div class="row">
+			<div class="col"></div>
+			<div class="col-md-auto">
+				<div class="row align-items-center" style="height: 6rem;">
+					<div class="col">
+						<img class="commandButton active img-fluid" src="./resources/images/buttons/mad-viking-64.png" data-action="createHero" style="margin-left: 4px;" alt="createHero">
+					</div>
+					<div class="col">
+						<img class="commandButton active img-fluid" src="./resources/images/" data-action="deleteHero" style="margin-left: 4px;" alt="deleteHero">
+					</div>
+					<div class="col">
+						<img class="commandButton active img-fluid" src="./resources/images/" data-action="showHighScore" style="margin-left: 4px;" alt="ability1">
+					</div>
+					<div class="col">
+						<img class="commandButton img-fluid" src="./resources/images/lock-button-128.png" data-action="restart" style="margin-left: 4px;" alt="ability1">
+					</div>
+					<div class="col">
+						<img class="commandButton img-fluid" src="./resources/images/lock-button-128.png" data-action="todo" style="margin-left: 4px;" alt="ability1">
+					</div>
+				</div>
+			</div>
+			<div class="col"></div>
+		</div>
+	</div>
+
 	<div id="mapBottomToolbar" class="function bottomToolbar container-fluid partial-html-page" data-html-placeholder="#mapHtmlPlaceholder">
 		<div class="row">
 			<div class="col"></div>

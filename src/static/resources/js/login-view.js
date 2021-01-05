@@ -4,6 +4,8 @@ $(function() {
     $("#btnShowCreateLogin").click(function() {loginView.drawCreateLoginScreen();});	
 	$("#btnCreateLogin").click(function() {loginView.createLogin();});	
     $("#btnLogin").click(function() {loginView.login();});
+
+    $(".commandButton").click(function(e, t) { loginView.buttonPushed(e); });
 });
 
 function LoginView() {
@@ -11,8 +13,12 @@ function LoginView() {
     var LOGIN_URL = "https://1r5188ua7k.execute-api.eu-north-1.amazonaws.com/login-fn";
     var CREATE_LOGIN_URL = "https://a95r6wbcca.execute-api.eu-north-1.amazonaws.com/create-login-fn";
     var maxHeroes = 3;
-    var heroView = new HeroView();
     var welcomeMusic = {};
+
+    this.buttonPushed = function(e) {
+        var action = $(e.currentTarget).attr("data-action");
+        if(action == "createHero") { heroView.drawCreateHeroScreen(e.currentTarget); }
+    };
 
     this.createLogin = function() {
         var newClientLogin = {userName:$("#newLogin").val(), password:$("#newPassword").val(), passwordRepeated:$("#newRepeatedPassword").val()};
@@ -53,9 +59,11 @@ function LoginView() {
     };
 
     var addEmptyCards = function(freeHeroesCount) {
-        var newHeroCard = $(".hero-card-empty.template").clone();
-        newHeroCard.removeClass("template");        
-        $(".heroes").append(newHeroCard);
+        for(var i=0; i<freeHeroesCount; i++) {
+            var newHeroCard = $(".hero-card-empty.template").clone();
+            newHeroCard.removeClass("template");        
+            $(".heroes").append(newHeroCard);
+        }        
     };
     
     var loginSuccess = function(serverGameSession) {
@@ -75,9 +83,11 @@ function LoginView() {
             var heroCard = drawHeroCard(heroes[heroIndex], heroIndex);
             $(".heroes").append(heroCard);
         }
-        if(heroes.length < maxHeroes)
-            addEmptyCards(maxHeroes-heroes.length);
-        $(".card").click(function() {heroView.chooseHero(this);});	
+        if(heroes == null) addEmptyCards(maxHeroes);
+        else if(heroes.length < maxHeroes) addEmptyCards(maxHeroes-heroes.length);
+        $(".card").click(function() {heroView.chooseHero(this);});
+        $("#loginBottomToolbar").show();
+        $("#topToolbar").show();
     };
     
     var loginFailed = function(errorMsg) {

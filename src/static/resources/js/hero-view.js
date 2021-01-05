@@ -6,7 +6,10 @@ $(function() {
 
 function HeroView() {
     var _this = this;
+    this.CREATE_HERO_URL = "https://ploifxhybi.execute-api.eu-north-1.amazonaws.com/create-hero-fn";
+
     this.chooseHero = function(heroCard) {
+        logDebug("chooseHero called.");
         loginView.stopWelcomeMusic();
         soundPlayer.playSound("./resources/sounds/select-hero.wav");
         var heroId = $(heroCard).attr("data-hero-id");
@@ -48,11 +51,13 @@ function HeroView() {
         logInfo(errorMsg);
     };
     
+    const HeroClassEnum = { WARRIOR:"WARRIOR" };
     this.createHero = function() {
         soundPlayer.playSound("./resources/sounds/create-hero.wav");
-        var hero = { name: $("#newHeroName").val()};
+        var heroClass = HeroClassEnum.WARRIOR;
+        var hero = { heroName: $("#newHeroName").val(), heroClass: heroClass };
         gameSession.data = hero;
-        post("Hero", "Create", gameSession, createHeroSuccess, createHeroFailed);
+        post(_this.CREATE_HERO_URL, gameSession, createHeroSuccess, createHeroFailed);
     };
     
     var createHeroSuccess = function(data) {

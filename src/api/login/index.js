@@ -43,11 +43,11 @@ exports.handler = function(event, context, callback) {
                     updateToken(login, userData.Item.userGuid.S, ddb, function(err, tokenData) {
                         if (err) { console.log(err); respondError(origin, 500, err, callback); }
                         else {
-                            getHeroInfo(userData.Item.userGuid.S, function(scoreData) {
-                                scoreData.maxTurns = MAX_TURNS;
-                                scoreData.accessToken = tokenData.accessToken;
-                                scoreData.userGuid = tokenData.userGuid;
-                                respondOK(origin, scoreData, callback);
+                            getHeroInfo(userData.Item.userGuid.S, function(heroData) {
+                                heroData.maxTurns = MAX_TURNS;
+                                heroData.accessToken = tokenData.accessToken;
+                                heroData.userGuid = tokenData.userGuid;
+                                respondOK(origin, heroData, callback);
                             });
                         }
                     });
@@ -93,13 +93,13 @@ function getHeroInfo(userGuid, callback) {
       //ProjectionExpression: 'ATTRIBUTE_NAME'
     };
     
-    ddb.getItem(params, function(err, userData) {
+    ddb.getItem(params, function(err, heroData) {
        if (err) { console.error(err); throw err; }
        else {
-            if(userData == null || userData.Item == null || userData.Item.score == null)
+            if(heroData == null || heroData.Item == null || heroData.Item.score == null)
                 callback({}); // First round no data yet
             else
-                callback(userData.Item);
+                callback(heroData.Item);
        }
     });
 }
