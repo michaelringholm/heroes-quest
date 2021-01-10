@@ -1,13 +1,16 @@
 const AWS = require("aws-sdk");
 const UUID = require('uuid');
+const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
     console.log(JSON.stringify(event));
     //AWS.config.update({region: 'eu-central-1'});
     var method = event.requestContext.http.method;
+    var origin = event.headers.origin;
+    var referer = event.headers.referer;
     if(method == "OPTIONS") {
-        respondOK({}, callback);
+        preFlightResponse(origin, referer, callback);
         return;
     }
     console.log("method="+method);
@@ -52,13 +55,38 @@ function sortHighScores(highScoresUnsorted) {
     return sorted.sort().reverse();
 };
 
+function tweakOrigin(origin) {
+    var tweakedOrigin = "-";
+    ALLOWED_ORIGINS.forEach(allowedOrigin => {
+        if(allowedOrigin == origin) tweakedOrigin = origin;
+    });
+    return tweakedOrigin;
+}
+
+function preFlightResponse(origin, referer, callback) {
+    var tweakedOrigin = "";
+    if(origin == ALLOWED_ORIGINS[0] || origin == ALLOWED_ORIGINS[1])
+        tweakedOrigin = origin;
+
+    const response = {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin' :   tweakOrigin(origin),
+            'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
+            'Access-Control-Allow-Headers' : "content-type"
+        },
+    };
+    callback(null, response);
+}
+
 function respondOK(data, callback) {
     const response = {
         statusCode: 200,
         body: JSON.stringify({ response: 'Got high score', data: data }),
         headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin' : "*", // Required for CORS support to work
+            'Access-Control-Allow-Origin' : tweakOrigin(origin),
             'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
             'Access-Control-Allow-Headers' : "content-type"
         },
@@ -72,7 +100,7 @@ function respondError(errorCode, errorMessage, callback) {
         body: JSON.stringify({ response: errorMessage }),
         headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin' : "*", // Required for CORS support to work
+            'Access-Control-Allow-Origin' : tweakOrigin(origin),
             'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
             'Access-Control-Allow-Headers' : "content-type"
         },

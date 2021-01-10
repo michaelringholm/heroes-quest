@@ -26,6 +26,14 @@ export class ComputeStack extends Core.Stack {
         this.createLoginFunction(apiSecurityGroup, vpc);
         this.createCreateLoginFunction(apiSecurityGroup, vpc);
         this.createCreateHeroFunction(apiSecurityGroup, vpc);
+        this.createChooseHeroFunction(apiSecurityGroup, vpc);
+        this.createMapMoveFunction(apiSecurityGroup, vpc);
+        this.createEnterTownFunction(apiSecurityGroup, vpc);
+        this.createPlayRoundFunction(apiSecurityGroup, vpc);
+        this.createLeaveTownFunction(apiSecurityGroup, vpc);
+        this.createBuyItemFunction(apiSecurityGroup, vpc);
+        this.createSellItemFunction(apiSecurityGroup, vpc);
+        this.createTrainHeroFunction(apiSecurityGroup, vpc);
         //this.createUpdateStatusFunction();
     }
 
@@ -65,10 +73,36 @@ export class ComputeStack extends Core.Stack {
         return this.createLambdaFunction(apiSecurityGroup, "create-hero-fn", "index.handler", "../src/api/create-hero", vpc);
     }
 
-
-    private createUpdateStatusFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
-        return this.createLambdaFunction(apiSecurityGroup, "update-status-api-lam", "index.mainHandler", "assets/update-status-api/", vpc);
+    private createChooseHeroFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "choose-hero-fn", "index.handler", "../src/api/choose-hero", vpc);
     }
+
+    /*private createUpdateStatusFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
+        return this.createLambdaFunction(apiSecurityGroup, "update-status-api-lam", "index.mainHandler", "assets/update-status-api/", vpc);
+    }*/
+
+    private createTrainHeroFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "train-hero-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+    }
+    private createLeaveTownFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "leave-town-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+    }
+    private createEnterTownFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "enter-town-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+    }
+    private createMapMoveFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "map-move-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+    }    
+
+    private createSellItemFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "sell-item-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+    }
+    private createBuyItemFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "buy-item-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+    }
+    private createPlayRoundFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "play-round-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+    }    
     
     private createStepFunctionsTrigger(apiSecurityGroup: ISecurityGroup, vpc: IVpc, queue:SQS.IQueue) {
         var sfnLambdaTriggerFunction = this.createLambdaFunction(apiSecurityGroup, "invoke-sfn-api-lam", "index.mainHandler", "assets/invoke-sfn-api/", vpc);
@@ -91,7 +125,7 @@ export class ComputeStack extends Core.Stack {
         role.addToPolicy(new IAM.PolicyStatement({
           effect: IAM.Effect.ALLOW,
           resources: ["*"],
-          actions: ["secretsmanager:GetSecretValue","dbqms:*","rds-data:*","xray:*","dynamodb:GetItem","dynamodb:PutItem"]
+          actions: ["secretsmanager:GetSecretValue","dbqms:*","rds-data:*","xray:*","dynamodb:GetItem","dynamodb:PutItem","dynamodb:Scan","dynamodb:Query"]
         }));
 
         Core.Tags.of(role).add(MetaData.NAME, MetaData.PREFIX+"api-role");

@@ -6,58 +6,60 @@ $(function() {
 
 function HeroView() {
     var _this = this;
+    this.HeroClassEnum = { WARRIOR:"WARRIOR",PRIEST:"PRIEST",ROGUE:"ROGUE" };
     this.CREATE_HERO_URL = "https://ploifxhybi.execute-api.eu-north-1.amazonaws.com/create-hero-fn";
+    this.CHOOSE_HERO_URL = "https://ploifxhybi.execute-api.eu-north-1.amazonaws.com/create-hero-fn";
 
     this.chooseHero = function(heroCard) {
         logDebug("chooseHero called.");
         loginView.stopWelcomeMusic();
         soundPlayer.playSound("./resources/sounds/select-hero.wav");
-        var heroId = $(heroCard).attr("data-hero-id");
+        var heroName = $(heroCard).attr("data-hero-name");
         
-        if (heroId) {
-            gameSession.heroId = heroId;
-            post("Hero", "ChooseHero", gameSession, chooseHeroSuccess, chooseHeroFailed);
+        if (heroName) {
+            gameSession.heroName = heroName;
+            post(CHOOSE_HERO_URL, gameSession, this.chooseHeroSuccess, this.chooseHeroFailed);
         }	
     };
 
     this.getHeroCardImage = function(heroClass) {
         var imgSrc = "";
         switch(heroClass) {
-            case "priest" : imgSrc = "./resources/images/characters/card-priest-male.png"; break;
-            case "warrior" : imgSrc = $("#warriorHeroImg").attr("src"); break;
-            case "rogue" : imgSrc = $("#rogueHeroImg").attr("src"); break;
+            case _this.HeroClassEnum.PRIEST : imgSrc = "./resources/images/characters/card-priest-male.png"; break;
+            case _this.HeroClassEnum.WARRIOR : imgSrc = $("#warriorHeroImg").attr("src"); break;
+            case _this.HeroClassEnum.ROGUE : imgSrc = $("#rogueHeroImg").attr("src"); break;
             default : imgSrc = $("#warriorHeroImg").attr("src");
         }
         return imgSrc;
     };    
     
-    var chooseHeroSuccess = function(data) {
-        logInfo("choose hero OK!");
+    this.chooseHeroSuccess = function(data) {
+        logDebug("choose hero OK!");
         if(data) {
             printDebug(data.hero);
             if(data.battle && data.battle.mob && data.battle.hero) { // The hero is already in a fight
                 battleView.startOrResumeBattle(data.battle);
-                logInfo("you resume the battle!");
+                logDebug("you resume the battle!");
             }		
             else if(data.town)
                 townView.drawTown(data.town);
             else
                 mapView.drawMap(data);
         }
-        logInfo(JSON.stringify(data));
+        logDebug(JSON.stringify(data));
     };
     
-    var chooseHeroFailed = function(errorMsg) {
-        logInfo(errorMsg);
+    this.chooseHeroFailed = function(errorMsg) {
+        logDebug(errorMsg);
     };
-    
-    const HeroClassEnum = { WARRIOR:"WARRIOR" };
+        
     this.createHero = function() {
         soundPlayer.playSound("./resources/sounds/create-hero.wav");
-        var heroClass = HeroClassEnum.WARRIOR;
-        var hero = { heroName: $("#newHeroName").val(), heroClass: heroClass };
-        gameSession.data = hero;
-        post(_this.CREATE_HERO_URL, gameSession, createHeroSuccess, createHeroFailed);
+        var heroClass = _this.HeroClassEnum.WARRIOR; // TODO
+        var data = { userGuid: gameSession.getUserGuid(), accessToken: gameSession.getAccessToken(), hero: {
+            heroName: $("#newHeroName").val(), heroClass: heroClass 
+        }};
+        post(_this.CREATE_HERO_URL, data, createHeroSuccess, createHeroFailed);
     };
     
     var createHeroSuccess = function(data) {

@@ -1,4 +1,4 @@
-functionName=om-hq-user-login
+functionName=om-hq-login-fn
 clear
 echo Compressing function code...
 #zip -rq drop.zip .

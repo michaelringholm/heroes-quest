@@ -10,7 +10,7 @@ $(function() {
 
 function LoginView() {
     var _this = this;
-    var LOGIN_URL = "https://1r5188ua7k.execute-api.eu-north-1.amazonaws.com/login-fn";
+    var LOGIN_URL = "https://1r5188ua7k.execute-api.eu-north-1.amazonaws.com/login-fn"; 
     var CREATE_LOGIN_URL = "https://a95r6wbcca.execute-api.eu-north-1.amazonaws.com/create-login-fn";
     var maxHeroes = 3;
     var welcomeMusic = {};
@@ -48,13 +48,13 @@ function LoginView() {
         soundPlayer.stop(welcomeMusic);
     };
 
-    var drawHeroCard = function(hero) {
+    var addHeroCard = function(hero) {
         var newHeroCard = $(".hero-card.template").clone();
         newHeroCard.removeClass("template");
-        $(newHeroCard).find(".hero-name").html(hero.heroName);
-        $(newHeroCard).find(".hero-text").html("");
-        $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero.heroClass));
-        $(newHeroCard).find(".card").attr("data-hero-id", hero.heroId);
+        $(newHeroCard).find(".hero-name").html(hero.heroName.S);
+        $(newHeroCard).find(".hero-text").html(hero.heroClass.S);
+        $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero.heroClass.S));
+        $(newHeroCard).find(".card").attr("data-hero-name", hero.heroName.S);
         return newHeroCard;
     };
 
@@ -66,21 +66,23 @@ function LoginView() {
         }        
     };
     
-    var loginSuccess = function(serverGameSession) {
+    var loginSuccess = function(login) {
         logInfo("login OK!");
-        logInfo(JSON.stringify(serverGameSession));
+        logInfo(JSON.stringify(login));
+        gameSession.setUserGuid(login.data.userGuid);
+        gameSession.setAccessToken(login.data.accessToken);
         
         $(".function").hide();
         $(".overlay").hide();
         $("#chooseHeroContainer").show();
         
-        gameSession.publicKey = serverGameSession.publicKey;
-        var heroes = serverGameSession.data.heroes;
+        //login.publicKey = login.publicKey;
+        var heroes = login.data.heroes;
     
         for(var heroIndex in heroes) {
             if(heroIndex > maxHeroes-1)
                 break;
-            var heroCard = drawHeroCard(heroes[heroIndex], heroIndex);
+            var heroCard = addHeroCard(heroes[heroIndex], heroIndex);
             $(".heroes").append(heroCard);
         }
         if(heroes == null) addEmptyCards(maxHeroes);

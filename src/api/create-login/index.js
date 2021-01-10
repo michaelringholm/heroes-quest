@@ -1,16 +1,21 @@
 const AWS = require("aws-sdk");
 const UUID = require('uuid');
+const FV = require('./field-verifier.js');
+
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
 const HERO_TABLE_NAME = "om-hq-hero"
+const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
     console.log(JSON.stringify(event));
     //AWS.config.update({region: 'eu-central-1'});
     var method = event.requestContext.http.method;
+    var origin = event.headers.origin;
+    var referer = event.headers.referer;
     if(method == "OPTIONS") {
-        respondOK({}, callback);
+        preFlightResponse(origin, referer, callback);
         return;
     }
     console.log("method="+method);
@@ -18,23 +23,26 @@ exports.handler = function(event, context, callback) {
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var login = JSON.parse(event.body);
     if(login.userName == null || login.password == null || login.passwordRepeated == null) {
-        console.error("login.userName, password or repeatedPassword was missing!"); respondError(500, "Failed to create login(0)", callback); 
+        console.error("login.userName, password or repeatedPassword was missing!"); respondError(origin, 500, "Failed to create login(0)", callback); 
     }
     
     getLogin(login.userName, (err, data) => {
-        if(err) { console.error(err); respondError(500, "Failed to create login(1)", callback); }
-        else {
-            console.log("Found the following user information while checking for existing login:");
-            console.log(JSON.stringify(data));
-            if(data != null && data.userName != null && data.userName.S == login.userName) { console.error(err); respondError(500, "User name already exists", callback); }
+        if(err) { console.error(err); respondError(origin, 500, "Failed to create login(1)", callback); }
+        else {    
+            if(data != null) {
+                console.log("Found the following user information while checking for existing login:");
+                console.log(JSON.stringify(data));        
+            }
+            if(data != null && data.userName != null && data.userName.S == login.userName) { console.error(err); respondError(origin, 500, "User name already exists", callback); }
             else {
                 createLogin(login, (err,data) => {
-                    if(err) { console.error(err); respondError(500, "Failed to create login(2)", callback); }
+                    if(err) { console.error(err); respondError(origin, 500, "Failed to create login(2)", callback); }
                     else {
-                        insertInitialData(data.userGuid, (err) => {
-                            if(err) { console.error(err); respondError(500, "Failed to create login(3)", callback); }
-                            else respondOK(data, callback);
-                        })                        
+                        respondOK(origin, data, callback);
+                        /*insertInitialData(data.userGuid, (err) => {
+                            if(err) { console.error(err); respondError(origin, 500, "Failed to create login(3)", callback); }
+                            else respondOK(origin, data, callback);
+                        })*/                        
                     }
                 });
             }
@@ -105,13 +113,24 @@ function getLogin(userName, callback) {
     });
 }
 
-function respondOK(data, callback) {
+function tweakOrigin(origin) {
+    var tweakedOrigin = "-";
+    ALLOWED_ORIGINS.forEach(allowedOrigin => {
+        if(allowedOrigin == origin) tweakedOrigin = origin;
+    });
+    return tweakedOrigin;
+}
+
+function preFlightResponse(origin, referer, callback) {
+    var tweakedOrigin = "";
+    if(origin == ALLOWED_ORIGINS[0] || origin == ALLOWED_ORIGINS[1])
+        tweakedOrigin = origin;
+
     const response = {
         statusCode: 200,
-        body: JSON.stringify({ response: 'Login created', data: data }),
         headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin' : "*", // Required for CORS support to work
+            'Access-Control-Allow-Origin' :   tweakOrigin(origin),
             'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
             'Access-Control-Allow-Headers' : "content-type"
         },
@@ -119,13 +138,27 @@ function respondOK(data, callback) {
     callback(null, response);
 }
 
-function respondError(errorCode, errorMessage, callback) {
+function respondOK(origin, data, callback) {
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify({ response: 'Login created', data: data }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin' : tweakOrigin(origin),
+            'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
+            'Access-Control-Allow-Headers' : "content-type"
+        },
+    };
+    callback(null, response);
+}
+
+function respondError(origin, errorCode, errorMessage, callback) {
     const response = {
         statusCode: errorCode,
         body: JSON.stringify({ response: errorMessage }),
         headers: {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin' : "*", // Required for CORS support to work
+            'Access-Control-Allow-Origin' : tweakOrigin(origin),
             'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
             'Access-Control-Allow-Headers' : "content-type"
         },

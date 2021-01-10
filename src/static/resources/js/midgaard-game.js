@@ -28,6 +28,25 @@ $(function() {
 	$("#toggleDebug").click(function() {toggleDebug()});
 });
 
+function GameSession() {
+	this.setUserGuid = function(userGuid) {
+		$("#userGuid").val(userGuid);
+	}
+
+	this.setAccessToken = function(accessToken) {
+		$("#accessToken").val(accessToken);
+	}
+
+	this.getUserGuid = function() {
+		return $("#userGuid").val();
+	}
+
+	this.getAccessToken = function() {
+		return $("#accessToken").val();
+	}
+}
+var gameSession = new GameSession();
+
 
 function toggleDebug() {
 	$("#debugInfo").toggle();

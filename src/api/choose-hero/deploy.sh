@@ -1,4 +1,4 @@
-functionName=om-hq-create-hero-fn
+functionName=om-hq-choose-hero-fn
 clear
 echo Compressing function code...
 #zip -rq drop.zip .

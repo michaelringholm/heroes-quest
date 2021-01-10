@@ -1,7 +1,7 @@
 import * as Core from '@aws-cdk/core';
 import EC2 = require('@aws-cdk/aws-ec2');
 import { MetaData } from './meta-data';
-import { IVpc } from '@aws-cdk/aws-ec2';
+import { IVpc, VpcEndpoint } from '@aws-cdk/aws-ec2';
 
 export class NetworkStack extends Core.Stack {
     public Vpc:EC2.IVpc;
@@ -10,17 +10,28 @@ export class NetworkStack extends Core.Stack {
     constructor(scope: Core.Construct, id: string, props?: Core.StackProps) {
         super(scope, id, props);
         this.Vpc = this.createVPC();
+        this.createEndpoints(this.Vpc);
         //this.createRDSSecurityGroup();
         this.ApiSecurityGroup = this.createAPISecurityGroup(this.Vpc);
+    }
+    
+    private createEndpoints(vpc: EC2.IVpc) {
+        vpc.addGatewayEndpoint(MetaData.PREFIX+"dyndb-ep", {
+            service: EC2.GatewayVpcEndpointAwsService.DYNAMODB,
+            subnets: [
+                 { subnetType: EC2.SubnetType.ISOLATED }, { subnetType: EC2.SubnetType.PUBLIC }
+            ]
+        });
     }
     
     private createVPC():EC2.IVpc {
         // Link: https://blog.codecentric.de/en/2019/09/aws-cdk-create-custom-vpc/
         var vpc = new EC2.Vpc(this, MetaData.PREFIX+"vpc", {
             cidr: "10.30.0.0/16", subnetConfiguration: [
-                { cidrMask: 24, name: MetaData.PREFIX+"private-sne", subnetType: EC2.SubnetType.PRIVATE },
+                { cidrMask: 24, name: MetaData.PREFIX+"private-sne", subnetType: EC2.SubnetType.ISOLATED },
                 { cidrMask: 25, name: MetaData.PREFIX+"public-sne", subnetType: EC2.SubnetType.PUBLIC }
             ],
+            natGateways: 0,
             maxAzs: 2
         });
         
@@ -67,7 +78,7 @@ export class NetworkStack extends Core.Stack {
             vpc: vpc,
             networkAclName: MetaData.PREFIX+"private-nacl",
             subnetSelection: {
-                subnetType: EC2.SubnetType.PRIVATE
+                subnetType: EC2.SubnetType.ISOLATED
             }
         });
         privateNacl.addEntry(MetaData.PREFIX+"private-nacl-allow-all-inbound", {
