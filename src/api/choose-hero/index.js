@@ -1,6 +1,10 @@
 const AWS = require("aws-sdk");
 const UUID = require('uuid');
 const FV = require('./field-verifier.js');
+var { MidgaardMainMap } = require("om-hq-lib");
+var { MobFactory } = require("om-hq-lib");
+var { MapDictionary } = require("om-hq-lib");
+
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
 const HERO_TABLE_NAME = "om-hq-hero"
@@ -9,7 +13,7 @@ const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
     console.log(JSON.stringify(event));
-    //AWS.config.update({region: 'eu-central-1'});
+    if(AWS.config.region == null) AWS.config.update({region: 'eu-north-1'});
     var method = event.requestContext.http.method;
     var origin = event.headers.origin;
     var referer = event.headers.referer;
@@ -27,7 +31,12 @@ exports.handler = function(event, context, callback) {
 
         //TODO
         var currentBattle = _battleCache[serverLogin.activeHero.heroId];
-        var currentMap = _mapFactory.create(serverLogin.activeHero.currentMapKey);
+
+        var map = new MidgaardMainMap();
+        map.buildMap(mapDefinition, rawMap);
+        MapDictionary.addMap(map);
+        var currentMap = MapDictionary.getMap(serverLogin.activeHero.currentMapKey);
+        
         var location = currentMap.getLocation(serverLogin.activeHero.currentCoordinates);
         var data = { hero: loadedHero, battle: currentBattle, map: currentMap, status: 'Your active hero is now [' + loadedHero.heroId + ']!' };
         //TODO

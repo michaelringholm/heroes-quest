@@ -1,4 +1,4 @@
-var { _logger } = require('../common/export.js');
+var { _logger } = require('../export.js');
 
 module.exports = 
 function Location(anonObj) {

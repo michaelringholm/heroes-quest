@@ -1,4 +1,4 @@
-var _logger = require('../../common/Logger.js');
+var _logger = require('../common/Logger.js');
 var Battle = require('./Battle.js');
 var BattleFactory = require('./BattleFactory.js');
 

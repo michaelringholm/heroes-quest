@@ -1,4 +1,4 @@
-var _logger = require('../../common/Logger.js');
+var _logger = require('../common/Logger.js');
 var _itemFactory = require('../item/ItemFactory.js');
 
 module.exports = function Smithy() {

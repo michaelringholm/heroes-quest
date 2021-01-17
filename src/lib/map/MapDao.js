@@ -1,6 +1,6 @@
-var _logger = require('./common/Logger.js');
-var AppContext = require('./context/AppContext.js');
-var _appContext = new AppContext();
+var _logger = require('../common/Logger.js');
+//var AppContext = require('./context/AppContext.js');
+//var _appContext = new AppContext();
 
 function MapDao() {
 	var _this = this;

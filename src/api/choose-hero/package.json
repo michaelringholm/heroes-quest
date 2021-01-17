@@ -2,7 +2,6 @@
   "dependencies": {
     "aws-sdk": "^2.815.0",
     "uuid": "^8.3.2",
-    "om-hq-common": "file://../../lib/common",
-    "om-hq-map": "file://../../lib/map"
+    "om-hq-lib": "file://../../lib"
   }
 }

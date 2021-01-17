@@ -1,6 +1,5 @@
-var _logger = require('../../common/Logger.js');
+var _logger = require('../common/Logger.js');
 
-module.exports = 
 function BattleDTO(hero, mob) {
 	var _this = this;
 	if(!hero || !mob) {

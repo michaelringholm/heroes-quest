@@ -1,6 +1,6 @@
 {
-    "name": "om-hq-common",
-    "displayName": "Opus Magus Heroes Quest Common",
+    "name": "om-hq-lib",
+    "displayName": "Opus Magus Lib",
     "main": "export.js",
     "version": "0.1.0",
     "dependencies": {

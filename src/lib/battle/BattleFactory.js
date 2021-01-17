@@ -1,4 +1,4 @@
-var _logger = require('../../common/Logger.js');
+var _logger = require('../common/Logger.js');
 var Battle = require('./Battle.js');
 
 function BattleFactory() {
@@ -17,5 +17,3 @@ function BattleFactory() {
   
   _this.construct();
 }
-
-module.exports = new BattleFactory();

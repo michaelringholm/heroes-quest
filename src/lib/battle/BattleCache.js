@@ -1,4 +1,4 @@
-var _logger = require('../../common/Logger.js');
+var _logger = require('../common/Logger.js');
 var _battleDao = require('./BattleDao.js');
 
 function BattleCache() {

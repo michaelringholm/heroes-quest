@@ -1,4 +1,4 @@
-var _logger = require('../../common/Logger.js');
+var _logger = require('../common/Logger.js');
 var Hero = require('../hero/Hero.js');
 
 module.exports =
