@@ -13,7 +13,7 @@ var body = {
     hero: {
         heroName: "Krom"
     },
-    userGuid: "12345"
+    userGuid: "364f73a3-e250-4cbb-90a4-7866ccd41d16"
 };
 
 var request = { 

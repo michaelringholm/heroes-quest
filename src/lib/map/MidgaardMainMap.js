@@ -1,7 +1,9 @@
-var { _logger } = require('../export.js');
-var { MobFactory } = require('../export.js');
+//var { _logger } = require('../export.js');
+//var { MobFactory } = require('../export.js');
+var _logger = require('../common/Logger.js');
+var MobFactory = require('../mob/MobFactory.js');
 var Location = require('./Location.js');
-//var _mapDao = require('./MapDao.js');
+var _mapDao = require('./MapDao.js');
 //var MobFactory = require('../mob/MobFactory.js');
 
 function MidgaardMainMap() {
@@ -89,3 +91,5 @@ function MidgaardMainMap() {
 		_this.mapDefinition = JSON.parse(_mapDao.loadDefinition(_this.key));
 	};
 }
+
+module.exports = MidgaardMainMap;

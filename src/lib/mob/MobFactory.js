@@ -46,3 +46,5 @@ function MobFactory() {
 	
 	_this.construct();
 }
+
+module.exports = MobFactory;

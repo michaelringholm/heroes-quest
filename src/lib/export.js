@@ -5,6 +5,7 @@ const MapDictionary = require('./map/MapDictionary.js');
 const MobFactory = require('./mob/MobFactory.js');
 const BattleFactory = require('./battle/BattleFactory.js');
 const BattleDTO = require('./battle/BattleDTO.js');
+const BattleCache = require('./battle/BattleCache.js');
 
 module.exports.Location = Location;
 module.exports.MidgaardMainMap = MidgaardMainMap;
@@ -13,3 +14,4 @@ module.exports.MapDictionary = MapDictionary;
 module.exports.MobFactory = MobFactory;
 module.exports.BattleFactory = BattleFactory;
 module.exports.BattleDTO = BattleDTO;
+module.exports.BattleCache = BattleCache;

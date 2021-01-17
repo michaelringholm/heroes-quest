@@ -4,6 +4,7 @@ const FV = require('./field-verifier.js');
 var { MidgaardMainMap } = require("om-hq-lib");
 var { MobFactory } = require("om-hq-lib");
 var { MapDictionary } = require("om-hq-lib");
+var { BattleCache } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
@@ -29,10 +30,13 @@ exports.handler = function(event, context, callback) {
     getHero(requestInput, (err, heroData) => {
         if(err) { console.error(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }
 
+        var hero = heroData.Items[0];
         //TODO
-        var currentBattle = _battleCache[serverLogin.activeHero.heroId];
+        var currentBattle = BattleCache[hero.userGuid.S+"#"+hero.heroName.S];
 
         var map = new MidgaardMainMap();
+        var mapDefinition = "";
+        var rawMap = "";
         map.buildMap(mapDefinition, rawMap);
         MapDictionary.addMap(map);
         var currentMap = MapDictionary.getMap(serverLogin.activeHero.currentMapKey);
