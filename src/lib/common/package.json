@@ -1,0 +1,8 @@
+{
+    "name": "om-hq-common",
+    "displayName": "Opus Magus Heroes Quest Common",
+    "main": "export.js",
+    "version": "0.1.0",
+    "dependencies": {
+    }
+}

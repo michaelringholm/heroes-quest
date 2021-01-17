@@ -1,0 +1,9 @@
+{
+    "name": "om-hq-map",
+    "displayName": "Opus Magus Heroes Quest Map",
+    "main": "exports.js",
+    "version": "0.1.0",
+    "dependencies": {
+        "om-hq-common": "file://../common"
+    }
+}

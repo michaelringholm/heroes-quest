@@ -25,10 +25,12 @@ exports.handler = function(event, context, callback) {
     getHero(requestInput, (err, heroData) => {
         if(err) { console.error(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }
 
-        var currentBattle = _battleCache[serverLogin.activeHero.heroId]; //TODO
+        //TODO
+        var currentBattle = _battleCache[serverLogin.activeHero.heroId];
         var currentMap = _mapFactory.create(serverLogin.activeHero.currentMapKey);
         var location = currentMap.getLocation(serverLogin.activeHero.currentCoordinates);
         var data = { hero: loadedHero, battle: currentBattle, map: currentMap, status: 'Your active hero is now [' + loadedHero.heroId + ']!' };
+        //TODO
         
         console.log("Found the following records while checking for existing hero:");
         console.log(JSON.stringify(heroData));
