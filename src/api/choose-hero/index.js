@@ -50,14 +50,14 @@ exports.handler = function(event, context, callback) {
         
         console.log("Found the following records while checking for existing hero:");
         console.log(JSON.stringify(heroData));
-        if(heroData != null && heroData.Count > 0) { console.error("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }                    
-        else {
+        //if(heroData != null && heroData.Count > 0) { console.error("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }                    
+        //else {
             // TODO
             /*createHero(requestInput, (err,newHeroData) => {
                 if(err) { console.error(err); respondError(origin, 500, "Failed to create hero(2):" + err, callback); }
                 else respondOK(origin, newHeroData, callback);
             });*/
-        }
+        //}
     });
 };
 
