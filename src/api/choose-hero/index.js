@@ -31,28 +31,32 @@ exports.handler = function(event, context, callback) {
         if(err) { console.error(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }
 
         var hero = heroData.Items[0];
-        //TODO
-        var currentBattle = BattleCache[hero.userGuid.S+"#"+hero.heroName.S];
+        hero.heroKey = hero.userGuid.S+"#"+hero.heroName.S;
+        if(hero != null && hero.currentMapKey == null) hero.currentMapKey = "midgaard-main";
+        if(hero != null && hero.currentCoordinates == null) hero.currentCoordinates = {x:0,y:0};
+        //TODO        
+        var currentBattle = BattleCache[hero.heroKey];
 
         var map = new MidgaardMainMap();
         var mapDefinition = "";
         var rawMap = "";
         map.buildMap(mapDefinition, rawMap);
         MapDictionary.addMap(map);
-        var currentMap = MapDictionary.getMap(serverLogin.activeHero.currentMapKey);
+        var currentMap = MapDictionary.getMap(hero.currentMapKey);
         
-        var location = currentMap.getLocation(serverLogin.activeHero.currentCoordinates);
-        var data = { hero: loadedHero, battle: currentBattle, map: currentMap, status: 'Your active hero is now [' + loadedHero.heroId + ']!' };
+        var location = currentMap.getLocation(hero.currentCoordinates);
+        var data = { hero: hero, battle: currentBattle, map: currentMap, status: 'Your active hero is now [' + hero.heroKey + ']!' };
         //TODO
         
         console.log("Found the following records while checking for existing hero:");
         console.log(JSON.stringify(heroData));
         if(heroData != null && heroData.Count > 0) { console.error("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }                    
         else {
-            createHero(requestInput, (err,newHeroData) => {
+            // TODO
+            /*createHero(requestInput, (err,newHeroData) => {
                 if(err) { console.error(err); respondError(origin, 500, "Failed to create hero(2):" + err, callback); }
                 else respondOK(origin, newHeroData, callback);
-            });
+            });*/
         }
     });
 };

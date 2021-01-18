@@ -24,10 +24,11 @@ function MapDao() {
 	
 	this.load = function(mapName) {
 		_logger.logInfo("MapDao.load");
+		//console.log(process.cwd());
 		var fs = require("fs");
 		var fileName = "./data/maps/" + mapName + '.map';
 		
-		var raw = fs.readFileSync(fileName).toString();
+		var raw = fs.readFileSync(fileName).toString(); // Read map from S3 instead
 		_logger.logInfo("Map [" + mapName + "] loaded!");
 		_logger.logInfo("Map JSON is [" + raw + "]!");
 		
@@ -39,7 +40,7 @@ function MapDao() {
 		var fs = require("fs");
 		var fileName = "./data/maps/" + mapName + '.map.definition';
 		
-		var raw = fs.readFileSync(fileName).toString();
+		var raw = fs.readFileSync(fileName).toString(); // Read map from S3 instead
 		_logger.logInfo("Map definition for [" + mapName + "] loaded!");
 		_logger.logInfo("Map definition JSON is [" + raw + "]!");
 		
