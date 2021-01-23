@@ -27,11 +27,11 @@ exports.handler = function(event, context, callback) {
     //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var requestInput = JSON.parse(event.body);    
     
-    getHero(requestInput, (err, heroData) => {
+    getHero(requestInput, (err, hero) => {
         if(err) { console.error(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }
 
-        var hero = heroData.Items[0];
-        hero.heroKey = hero.userGuid.S+"#"+hero.heroName.S;
+        //var hero = heroData.Items[0];
+        hero.heroKey = hero.userGuid+"#"+hero.heroName;
         if(hero != null && hero.currentMapKey == null) hero.currentMapKey = "midgaard-main";
         if(hero != null && hero.currentCoordinates == null) hero.currentCoordinates = {x:0,y:0};
         //TODO        
@@ -49,7 +49,11 @@ exports.handler = function(event, context, callback) {
         //TODO
         
         console.log("Found the following records while checking for existing hero:");
-        console.log(JSON.stringify(heroData));
+        console.log(JSON.stringify(hero));
+        updateActiveHero(requestInput, hero, (err, updatedHero) => {
+            if(err) { console.error(err); respondError(origin, 500, "Failed to set active hero:" + err, callback); }
+            else respondOK(origin, data, callback);
+        });
         //if(heroData != null && heroData.Count > 0) { console.error("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }                    
         //else {
             // TODO
@@ -60,6 +64,56 @@ exports.handler = function(event, context, callback) {
         //}
     });
 };
+
+function updateActiveHero(requestInput, hero, callback) {
+    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid","hero.heroName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
+    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+    /*var params = {
+        TableName: HERO_TABLE_NAME,
+        Item: {
+          'userGuid': {S: requestInput.userGuid},
+          'heroName': {S: requestInput.hero.heroName},
+          'heroClass': {S: requestInput.hero.heroClass}
+        },
+        ReturnConsumedCapacity: "TOTAL", 
+        //ProjectionExpression: 'ATTRIBUTE_NAME'
+    };    
+    ddb.updateItem(params, function(err, newHeroData) {
+        if (err) { console.log(err); callback(err, null); }
+        else {       
+            console.log("Hero created");
+            callback(null, newHeroData);
+        }
+    });*/  
+
+    var docClient = new AWS.DynamoDB.DocumentClient();
+    
+    var params = {
+        TableName:HERO_TABLE_NAME,
+        Key:{
+            "userGuid": requestInput.userGuid,
+            "heroName": requestInput.hero.heroName
+        },
+        UpdateExpression: "set activeHero = :activeHero",
+        ExpressionAttributeValues:{
+            ":activeHero":hero.heroName
+        },
+        ReturnValues:"ALL_NEW"
+    };
+
+    docClient.update(params, (err, updatedTableItem) => {
+        if(err) { callback(err, null); return; }
+        //hero.activeHeroName = hero.heroName;
+        var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
+        //var hero = AWS.DynamoDB.Converter.unmarshall(hero); // Seems only new fields are in Dynamo format
+        /*console.log("RETURNED FROM UPDATE STATEMENT");
+        console.log(JSON.stringify(updatedTableItem));
+        console.log("RETURNED FROM UNMARSHALL");
+        console.log(JSON.stringify(updatedHero));*/
+        hero.activeHero = updatedHero.activeHero;
+        callback(null, hero);
+    })
+}
 
 function createMap(requestInput, callback) {
     var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid","hero.heroName","hero.heroClass"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
@@ -122,7 +176,8 @@ function getHero(requestInput, callback) {
         if(err) { callback(err, null); return; }
         console.log("Got these data via statement:");
         console.log(JSON.stringify(heroData));
-        callback(null, heroData);
+        var hero = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
+        callback(null, hero);
     })
 }
 
@@ -154,7 +209,7 @@ function preFlightResponse(origin, referer, callback) {
 function respondOK(origin, data, callback) {
     const response = {
         statusCode: 200,
-        body: JSON.stringify({ response: 'Hero created', data: data }),
+        body: JSON.stringify({ response: 'Hero chosen', data: data }),
         headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin' : tweakOrigin(origin),

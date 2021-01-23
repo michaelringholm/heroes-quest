@@ -8,7 +8,7 @@ function HeroView() {
     var _this = this;
     this.HeroClassEnum = { WARRIOR:"WARRIOR",PRIEST:"PRIEST",ROGUE:"ROGUE" };
     this.CREATE_HERO_URL = "https://ploifxhybi.execute-api.eu-north-1.amazonaws.com/create-hero-fn";
-    this.CHOOSE_HERO_URL = "https://ploifxhybi.execute-api.eu-north-1.amazonaws.com/create-hero-fn";
+    this.CHOOSE_HERO_URL = "https://i0xybknpwa.execute-api.eu-north-1.amazonaws.com/choose-hero-fn";
 
     this.chooseHero = function(heroCard) {
         logDebug("chooseHero called.");
@@ -17,8 +17,8 @@ function HeroView() {
         var heroName = $(heroCard).attr("data-hero-name");
         
         if (heroName) {
-            gameSession.heroName = heroName;
-            post(CHOOSE_HERO_URL, gameSession, this.chooseHeroSuccess, this.chooseHeroFailed);
+            data = { userGuid: gameSession.getUserGuid(), accessToken: gameSession.getAccessToken(), hero: { heroName: heroName } };
+            post(_this.CHOOSE_HERO_URL, data, this.chooseHeroSuccess, this.chooseHeroFailed);
         }	
     };
 
