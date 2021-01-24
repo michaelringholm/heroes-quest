@@ -8,6 +8,7 @@ $(function() {
 function MapView() {
     var _this = this;
     var pixelMultiplier = 32;
+    this.MAP_MOVE_URL = "https://55330k0b71.execute-api.eu-north-1.amazonaws.com/map-move-fn";
 
     var move = function(direction) {
         if(!direction)
@@ -15,7 +16,7 @@ function MapView() {
         else
             gameSession.direction = direction;
         
-        post("Map", "Move", gameSession, moveSuccess, moveFailed);
+        post(_this.MAP_MOVE_URL, gameSession, moveSuccess, moveFailed);
     };
     
     var moveSuccess = function(data) {
@@ -41,7 +42,8 @@ function MapView() {
         logInfo(errorMsg);
     };    
 
-    this.drawMap = function(data) {
+    this.drawMap = function(response) {
+        var data = response.data;
         $(".function").hide();
         $(".overlay").hide();
         $(canvasLayer1).show();

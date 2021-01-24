@@ -66,37 +66,17 @@ exports.handler = function(event, context, callback) {
 };
 
 function updateActiveHero(requestInput, hero, callback) {
-    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid","hero.heroName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
-    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    /*var params = {
-        TableName: HERO_TABLE_NAME,
-        Item: {
-          'userGuid': {S: requestInput.userGuid},
-          'heroName': {S: requestInput.hero.heroName},
-          'heroClass': {S: requestInput.hero.heroClass}
-        },
-        ReturnConsumedCapacity: "TOTAL", 
-        //ProjectionExpression: 'ATTRIBUTE_NAME'
-    };    
-    ddb.updateItem(params, function(err, newHeroData) {
-        if (err) { console.log(err); callback(err, null); }
-        else {       
-            console.log("Hero created");
-            callback(null, newHeroData);
-        }
-    });*/  
-
+    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
     var docClient = new AWS.DynamoDB.DocumentClient();
     
     var params = {
-        TableName:HERO_TABLE_NAME,
+        TableName:LOGIN_TABLE_NAME,
         Key:{
-            "userGuid": requestInput.userGuid,
-            "heroName": requestInput.hero.heroName
+            "userName": requestInput.userName
         },
-        UpdateExpression: "set activeHero = :activeHero",
+        UpdateExpression: "set activeHeroName = :activeHeroName",
         ExpressionAttributeValues:{
-            ":activeHero":hero.heroName
+            ":activeHeroName":hero.heroName
         },
         ReturnValues:"ALL_NEW"
     };

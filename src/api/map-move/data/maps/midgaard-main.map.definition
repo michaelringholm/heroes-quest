@@ -1,0 +1,11 @@
+{
+	"terrainTypes" :{
+		"w":{"terrainType":"woods"},
+		"h":{"terrainType":"hills"},
+		"t":{"terrainType":"town"},
+		"s":{"terrainType":"sea"},
+		"c":{"terrainType":"cave"},
+		"r":{"terrainType":"road"}
+	},
+	"towns":[ {"key":"midtheim", "name":"Midtheim", "x":"3", "y":"1"}, {"key":"fardaal", "name":"Fardaal", "x":"12", "y":"4"} ]
+}

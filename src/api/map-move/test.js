@@ -7,6 +7,7 @@ var handler = require("./index.js");
 
 console.log("Started...");
 data = { hero: { heroName: "Krom", heroClass: "WARRRIOR"} }
+Logger.logWarn("aaaa");
 
 var body = {
     hero: {
@@ -14,7 +15,7 @@ var body = {
     },
     userGuid: "364f73a3-e250-4cbb-90a4-7866ccd41d16",
     userName: "ethlore",
-    activeHeroName: "Krom",
+    direction: "east"
 };
 
 var request = { 
