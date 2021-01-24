@@ -83,12 +83,18 @@ function MidgaardMainMap() {
 		}
 	};
 	
-	this.buildMap = function(mapDefinition, rawMap) {
+	this.buildMap = function(callback) {
 		_logger.logInfo("MidgaardMainMap.construct");
 		var mob = mobFactory.create();
-		var rawMap = _mapDao.load(_this.key);
-		_this.mapMatrix = rawMap.match(/[^\r\n]+/g);
-		_this.mapDefinition = JSON.parse(_mapDao.loadDefinition(_this.key));
+		_mapDao.load(_this.key, (err, rawMap) => {
+			if(err) { callback(err, null); return; }
+			_this.mapMatrix = rawMap.match(/[^\r\n]+/g);
+			_mapDao.loadDefinition(_this.key, (err, mapDefinition) => {
+				if(err) { callback(err, null); return; }
+				JSON.parse(mapDefinition);
+				callback(null, {});
+		   });
+		});
 	};
 }
 

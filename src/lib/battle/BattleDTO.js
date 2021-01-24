@@ -18,3 +18,5 @@ function BattleDTO(hero, mob) {
   
   _this.construct();
 }
+
+module.exports = BattleDTO;

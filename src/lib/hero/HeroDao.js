@@ -1,5 +1,7 @@
-var _logger = require('../../common/Logger.js');
+var _logger = require('../common/Logger.js');
+var FV = require('../common/field-verifier.js');
 var HeroDTO = require('./HeroDTO.js');
+var AWS = require("aws-sdk");
 
 function HeroDao() {
 	var _this = this;
@@ -52,7 +54,32 @@ function HeroDao() {
 		}
 		else
 			_logger.error("Skipping save of hero as the hero in invalid!");
-	};	
+	};
+
+	this.updateBattleStatus = function(requestInput, inBattle, callback) {
+		var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
+		var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
+		var docClient = new AWS.DynamoDB.DocumentClient();
+		
+		var params = {
+			TableName:LOGIN_TABLE_NAME,
+			Key:{
+				"userName": userName
+			},
+			UpdateExpression: "set inBattle = :inBattle",
+			ExpressionAttributeValues:{
+				":inBattle":inBattle
+			},
+			ReturnValues:"ALL_NEW"
+		};
+	
+		docClient.update(params, (err, updatedTableItem) => {
+			if(err) { callback(err, null); return; }
+			//var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
+			//heroDTO.activeHero = updatedHero.activeHero;
+			callback(null, {});
+		})
+	};
 	
 	this.construct = function() {
 		_logger.logInfo("HeroDao.construct");

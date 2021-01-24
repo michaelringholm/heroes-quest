@@ -1,12 +1,16 @@
 var Logger = require("./common/Logger.js");
+var FieldVerifier = require("./common/field-verifier.js");
 const MidgaardMainMap = require('./map/MidgaardMainMap.js');
 const Location = require('./map/Location.js');
 const MapDictionary = require('./map/MapDictionary.js');
 const MobFactory = require('./mob/MobFactory.js');
 const BattleFactory = require('./battle/BattleFactory.js');
 const BattleDTO = require('./battle/BattleDTO.js');
-const BattleCache = require('./battle/BattleCache.js');
+const Hero = require('./hero/Hero.js');
+const HeroDTO = require('./hero/HeroDTO.js');
+const HeroDAO = require('./hero/HeroDAO.js');
 
+module.exports.FieldVerifier = FieldVerifier;
 module.exports.Location = Location;
 module.exports.MidgaardMainMap = MidgaardMainMap;
 module.exports.Logger = Logger;
@@ -14,4 +18,6 @@ module.exports.MapDictionary = MapDictionary;
 module.exports.MobFactory = MobFactory;
 module.exports.BattleFactory = BattleFactory;
 module.exports.BattleDTO = BattleDTO;
-module.exports.BattleCache = BattleCache;
+module.exports.Hero = Hero;
+module.exports.HeroDAO = HeroDAO;
+module.exports.HeroDAO = HeroDAO;

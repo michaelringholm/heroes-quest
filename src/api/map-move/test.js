@@ -1,3 +1,4 @@
+var AWS = require("aws-sdk");
 var { Logger } = require("om-hq-lib");
 var { MidgaardMainMap } = require("om-hq-lib");
 var { MobFactory } = require("om-hq-lib");

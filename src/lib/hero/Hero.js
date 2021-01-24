@@ -2,6 +2,7 @@ var _logger = require('../common/Logger.js');
 var Battle = require('../battle/Battle.js');
 var BattleDTO = require('../battle/BattleDTO.js');
 var _battleDao = require('../battle/BattleDao.js');
+var _heroDao = require('../hero/HeroDao.js');
 var Coordinate = require('../map/Coordinate.js');
 var _mapDao = require('../map/MapDao.js');
 var _mapFactory = require('../map/MapDictionary.js');
@@ -51,7 +52,7 @@ module.exports = function Hero(heroDTO) {
 	};	
 	
 	// east, west, north, south, up, down
-	this.move = function(direction, battleCache)  {
+	this.move = function(requestInput, heroDTO, direction, map)  {
 		_logger.logInfo("Hero.move");
 		var targetCoordinates = new Coordinate(_this.heroDTO.currentCoordinates);
 		if(direction == "west")
@@ -65,17 +66,22 @@ module.exports = function Hero(heroDTO) {
 		
 		_logger.logInfo("targetCoordinates=[" + JSON.stringify(targetCoordinates) + "]");
 		
-		var targetLocation = _mapFactory.create(_this.heroDTO.currentMapKey).getLocation(targetCoordinates);
+		var targetLocation = map.getLocation(targetCoordinates);
 		
 		if(targetLocation) {
 			_this.heroDTO.currentCoordinates = targetCoordinates;
 			if(targetLocation.mob) {
-				battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
-				_battleDao.save(battleCache);
+				//battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
+				_logger.logInfo("Mob found at location, entering battle!");
+				var battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);
+				_battleDao.save(battleDTO);
+				heroDTO.isInBattle = true;
+				_heroDao.updateBattleStatus(requestInput, heroDTO);
+				return { newLocation: targetLocation, battle: battleDTO };
 			}
 		}
 		
-		return targetLocation;
+		return { newLocation: targetLocation };
 	};
 	
 	this.visitMeadhall = function() {

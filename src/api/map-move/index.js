@@ -5,6 +5,7 @@ var { MidgaardMainMap } = require("om-hq-lib");
 var { MobFactory } = require("om-hq-lib");
 var { MapDictionary } = require("om-hq-lib");
 var { BattleCache } = require("om-hq-lib");
+var { Hero } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
@@ -35,55 +36,64 @@ exports.handler = function(event, context, callback) {
             heroDTO.heroKey = heroDTO.userGuid+"#"+heroDTO.heroName;
             if(heroDTO != null && heroDTO.currentMapKey == null) heroDTO.currentMapKey = "midgaard-main";
             if(heroDTO != null && heroDTO.currentCoordinates == null) heroDTO.currentCoordinates = {x:0,y:0};
-            var currentBattle = BattleCache[heroDTO.heroKey];
-            var map = new MidgaardMainMap();
-            var mapDefinition = "";
-            var rawMap = "";
-            map.buildMap(mapDefinition, rawMap);
-            MapDictionary.addMap(map);
-            var currentMap = MapDictionary.getMap(heroDTO.currentMapKey);
-            
-            var location = currentMap.getLocation(heroDTO.currentCoordinates);
-            var data = { heroDTO: heroDTO, battle: currentBattle, map: currentMap, status: 'Your active heroDTO is now [' + heroDTO.heroKey + ']!' };
-            var direction = requestInput.direction;
-            if (direction == "west" || direction == "east" || direction == "north" || direction == "south") {
-                if (heroDTO.inBattle) {
-                    var battle = 
-                    respondOK(origin, battle, callback);
-                    return;
-                }
-                else {
-                    serverLogin.activeHero.currentCoordinates;
-                    var location = new Hero(heroDTO).move(direction, _battleCache);
 
-                    if (location) {
-                        //_heroDao.save(serverLogin.activeHero);
-                        var battle = _battleCache[serverLogin.activeHero.heroId];
-                        if (battle) {
-                            updateBattle(requestInput, heroDTO, (err, updatedHero) => {
-                                if(err) { console.error(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
-                                respondOK(origin, battle, callback);
-                                return;
-                            });
-                        }
-                        else {
-                            updateMapLocation(requestInput, heroDTO, (err, updatedHero) => {
-                                if(err) { console.error(err); respondError(origin, 500, "Failed to update location:" + err, callback); return; }
-                                respondOK(origin, location, callback);
-                                return;
-                            });
-                        }
+            var map = new MidgaardMainMap();
+            map.buildMap((err) => {
+                if(err) { console.error(err); respondError(origin, 500, "Failed to build map:" + err, callback); return; }
+                MapDictionary.addMap(map);
+                var currentMap = MapDictionary.getMap(heroDTO.currentMapKey);
+                
+                var location = currentMap.getLocation(heroDTO.currentCoordinates);
+                //var data = { heroDTO: heroDTO, battle: currentBattle, map: currentMap, status: 'Your active heroDTO is now [' + heroDTO.heroKey + ']!' };
+                var direction = requestInput.direction;
+                if (direction == "west" || direction == "east" || direction == "north" || direction == "south") {
+                    if (heroDTO.inBattle) {
+                        getBattle(heroDTO.heroKey, (err, battleDTO) => {
+                            if(err) { console.error(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
+                            respondOK(origin, battleDTO, callback);
+                            return;
+                        });
                     }
-                    else { console.error(err); respondError(origin, 500, "Invalid location!", callback); return; }      
+                    else {
+                        heroDTO.currentCoordinates;
+                        console.log("coords are:", heroDTO.currentCoordinates);
+                        var moveResult = new Hero(heroDTO).move(requestInput, heroDTO, direction, currentMap);
+
+                        if (moveResult.newLocation) {
+                            //_heroDao.save(serverLogin.activeHero);
+                            //var battle = _battleCache[serverLogin.activeHero.heroId];
+                            if (moveResult.battle) {
+                                updateBattle(requestInput, heroDTO, (err, updatedHero) => {
+                                    if(err) { console.error(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
+                                    respondOK(origin, moveResult, callback);
+                                    return;
+                                });
+                            }
+                            else {
+                                updateMapLocation(requestInput, heroDTO, (err, updatedHero) => {
+                                    if(err) { console.error(err); respondError(origin, 500, "Failed to update location:" + err, callback); return; }
+                                    respondOK(origin, moveResult, callback);
+                                    return;
+                                });
+                            }
+                        }
+                        else { console.error(err); respondError(origin, 500, "Invalid location!", callback); return; }      
+                    }
                 }
-            }
-            else { console.error("Invalid direction [" + direction + "]!"); respondError(origin, 500, "Invalid direction [" + direction + "]!", callback); return; }            
+                else { console.error("Invalid direction [" + direction + "]!"); respondError(origin, 500, "Invalid direction [" + direction + "]!", callback); return; }            
+            });
         });
     });
 };
 
+function getBattle(heroKey, callback) {
+
+}
+
 function updateBattle(requestInput, heroDTO, callback) {
-    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid","heroDTO.heroName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
+    console.log("updateBattle...");
+    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
+    var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
     var docClient = new AWS.DynamoDB.DocumentClient();
     
     var params = {
@@ -108,14 +118,16 @@ function updateBattle(requestInput, heroDTO, callback) {
 }
 
 function updateMapLocation(requestInput, heroDTO, callback) {
-    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid","heroDTO.heroName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
+    console.log("updateMapLocation...");
+    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
+    var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
     var docClient = new AWS.DynamoDB.DocumentClient();
     
     var params = {
         TableName:HERO_TABLE_NAME,
         Key:{
             "userGuid": requestInput.userGuid,
-            "heroName": requestInput.heroDTO.heroName
+            "heroName": heroDTO.heroName
         },
         UpdateExpression: "set activeHero = :activeHero",
         ExpressionAttributeValues:{
@@ -128,11 +140,13 @@ function updateMapLocation(requestInput, heroDTO, callback) {
         if(err) { callback(err, null); return; }
         var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
         heroDTO.activeHero = updatedHero.activeHero;
+        console.log("updateMapLocation OK!");
         callback(null, heroDTO);
     })
 }
 
 function getActiveHeroName(requestInput, callback) {
+    console.log("getActiveHeroName...");
     var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
     //AWS.config.update({region: 'eu-central-1'});
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});

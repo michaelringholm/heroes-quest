@@ -1,4 +1,5 @@
 var _logger = require('../common/Logger.js');
+var AWS = require("aws-sdk");
 //var AppContext = require('./context/AppContext.js');
 //var _appContext = new AppContext();
 
@@ -22,17 +23,22 @@ function MapDao() {
 		return fileFound;
 	};
 	
-	this.load = function(mapName) {
+	this.load = function(mapName, callback) {
 		_logger.logInfo("MapDao.load");
-		//console.log(process.cwd());
-		var fs = require("fs");
-		var fileName = "./data/maps/" + mapName + '.map';
-		
-		var raw = fs.readFileSync(fileName).toString(); // Read map from S3 instead
-		_logger.logInfo("Map [" + mapName + "] loaded!");
-		_logger.logInfo("Map JSON is [" + raw + "]!");
-		
-		return raw;
+		var fileName = mapName + '.map';
+		var s3 = new AWS.S3();
+		var bucketName = "om-hq-map";
+		var params = {
+			Bucket: bucketName, 
+			Key: fileName
+		};
+		s3.getObject(params, (err, rawMap) => {
+			if (err) { _logger.logError(err, err.stack); callback(err, null); return; }
+			_logger.logInfo("Map [" + mapName + "] loaded!");
+			_logger.logInfo("Map JSON is [" + rawMap + "]!");
+			callback(null, rawMap);
+			return;
+		});		
 	};
 	
 	this.loadDefinition = function(mapName) {
