@@ -91,7 +91,7 @@ function MidgaardMainMap() {
 			_this.mapMatrix = rawMap.match(/[^\r\n]+/g);
 			_mapDao.loadDefinition(_this.key, (err, mapDefinition) => {
 				if(err) { callback(err, null); return; }
-				JSON.parse(mapDefinition);
+				_this.mapDefinition = JSON.parse(mapDefinition);
 				callback(null, {});
 		   });
 		});

@@ -49,7 +49,7 @@ exports.handler = function(event, context, callback) {
                 if (direction == "west" || direction == "east" || direction == "north" || direction == "south") {
                     if (heroDTO.inBattle) {
                         getBattle(heroDTO.heroKey, (err, battleDTO) => {
-                            if(err) { console.error(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
+                            if(err) { console.error(err, err.stack); respondError(origin, 500, "failed to get battle:" + err, callback); return; }
                             respondOK(origin, battleDTO, callback);
                             return;
                         });
@@ -57,27 +57,28 @@ exports.handler = function(event, context, callback) {
                     else {
                         heroDTO.currentCoordinates;
                         console.log("coords are:", heroDTO.currentCoordinates);
-                        var moveResult = new Hero(heroDTO).move(requestInput, heroDTO, direction, currentMap);
-
-                        if (moveResult.newLocation) {
-                            //_heroDao.save(serverLogin.activeHero);
-                            //var battle = _battleCache[serverLogin.activeHero.heroId];
-                            if (moveResult.battle) {
-                                updateBattle(requestInput, heroDTO, (err, updatedHero) => {
-                                    if(err) { console.error(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
-                                    respondOK(origin, moveResult, callback);
-                                    return;
-                                });
+                        new Hero(heroDTO).move(requestInput, heroDTO, direction, currentMap, (err, moveResult) => {
+                            if(err) { console.error(err); respondError(origin, 500, "Failed to move" + err, callback); return; }
+                            if (moveResult.newLocation) {
+                                //_heroDao.save(serverLogin.activeHero);
+                                //var battle = _battleCache[serverLogin.activeHero.heroId];
+                                if (moveResult.battle) {
+                                    updateBattle(requestInput, heroDTO, (err, updatedHero) => {
+                                        if(err) { console.error(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
+                                        respondOK(origin, moveResult, callback);
+                                        return;
+                                    });
+                                }
+                                else {
+                                    updateMapLocation(requestInput, heroDTO, (err, updatedHero) => {
+                                        if(err) { console.error(err); respondError(origin, 500, "Failed to update location:" + err, callback); return; }
+                                        respondOK(origin, moveResult, callback);
+                                        return;
+                                    });
+                                }
                             }
-                            else {
-                                updateMapLocation(requestInput, heroDTO, (err, updatedHero) => {
-                                    if(err) { console.error(err); respondError(origin, 500, "Failed to update location:" + err, callback); return; }
-                                    respondOK(origin, moveResult, callback);
-                                    return;
-                                });
-                            }
-                        }
-                        else { console.error(err); respondError(origin, 500, "Invalid location!", callback); return; }      
+                            else { console.error(err); respondError(origin, 500, "Invalid location!", callback); return; }   
+                        });                           
                     }
                 }
                 else { console.error("Invalid direction [" + direction + "]!"); respondError(origin, 500, "Invalid direction [" + direction + "]!", callback); return; }            
@@ -100,7 +101,7 @@ function updateBattle(requestInput, heroDTO, callback) {
         TableName:HERO_TABLE_NAME,
         Key:{
             "userGuid": requestInput.userGuid,
-            "heroName": requestInput.heroDTO.heroName
+            "heroName": heroDTO.heroName
         },
         UpdateExpression: "set activeHero = :activeHero",
         ExpressionAttributeValues:{

@@ -1,4 +1,5 @@
 var Logger = require("./common/Logger.js");
+var AppContext = require("./common/AppContext.js");
 var FieldVerifier = require("./common/field-verifier.js");
 const MidgaardMainMap = require('./map/MidgaardMainMap.js');
 const Location = require('./map/Location.js');
@@ -10,6 +11,7 @@ const Hero = require('./hero/Hero.js');
 const HeroDTO = require('./hero/HeroDTO.js');
 const HeroDAO = require('./hero/HeroDAO.js');
 
+module.exports.AppContext = AppContext;
 module.exports.FieldVerifier = FieldVerifier;
 module.exports.Location = Location;
 module.exports.MidgaardMainMap = MidgaardMainMap;

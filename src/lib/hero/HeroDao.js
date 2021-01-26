@@ -1,11 +1,13 @@
 var _logger = require('../common/Logger.js');
+var appContext = require('../common/AppContext.js');
 var FV = require('../common/field-verifier.js');
 var HeroDTO = require('./HeroDTO.js');
 var AWS = require("aws-sdk");
 
 function HeroDao() {
 	var _this = this;
-		
+	if(AWS.config.region == null) AWS.config.update({region: 'eu-north-1'});
+	
 	this.exists = function(heroId) {
 		_logger.logInfo("HeroDao.exists");
 		var fs = require("fs");
@@ -58,13 +60,12 @@ function HeroDao() {
 
 	this.updateBattleStatus = function(requestInput, inBattle, callback) {
 		var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
-		var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
 		var docClient = new AWS.DynamoDB.DocumentClient();
 		
 		var params = {
-			TableName:LOGIN_TABLE_NAME,
+			TableName:appContext.LOGIN_TABLE_NAME,
 			Key:{
-				"userName": userName
+				"userName": requestInput.userName // TODO check access token match
 			},
 			UpdateExpression: "set inBattle = :inBattle",
 			ExpressionAttributeValues:{

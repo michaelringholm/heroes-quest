@@ -1,32 +1,34 @@
-var _logger = require('../common/Logger.js');
+var logger = require('../common/Logger.js');
+var appContext = require('../common/AppContext.js');
 var Battle = require('./Battle.js');
 var BattleFactory = require('./BattleFactory.js');
 var AWS = require("aws-sdk");
 
 function BattleDao() {
 	var _this = this;
+	var bucketName = appContext.PREFIX+"battle";
+	var s3 = new AWS.S3();
 		
 	var exists = function() {
-		_logger.logInfo("BattleDao.exists");
+		logger.logInfo("BattleDao.exists");
 		var fs = require("fs");
 		var fileName = "./data/battles/" + "battles" + '.json';
 			
 		var fileFound = true;
 		try {
 			fs.statSync(fileName);
-			_logger.logInfo("File [" + fileName + "] exists!");
+			logger.logInfo("File [" + fileName + "] exists!");
 		}
 		catch(e) {
 			fileFound = false;
-			_logger.logWarn("File [" + fileName + "] does not exist!");
+			logger.logWarn("File [" + fileName + "] does not exist!");
 		}
 		return fileFound;
 	};
 	
 	this.load = function(callback) {
-		_logger.logInfo("BattleDao.load");
+		logger.logInfo("BattleDao.load");
 		var fileName = "battles.json";
-		var bucketName = "om-hq-battle";
 		var params = {
 			Bucket: bucketName, 
 			Key: fileName
@@ -34,7 +36,7 @@ function BattleDao() {
 
 		var s3 = new AWS.S3();
 		s3.getObject(params, function(err, data) {
-			if (err) { _logger.logError(err, err.stack); callback(err, null); return; }
+			if (err) { logger.logError(err, err.stack); callback(err, null); return; }
 			console.log(data);
 			callback();
 			 /*
@@ -48,7 +50,7 @@ function BattleDao() {
 		
 		/*if(exists()) {
 			var battlesJson = fs.readFileSync(fileName).toString();
-			_logger.logInfo("Battles JSON [" + battlesJson + "] loaded!");
+			logger.logInfo("Battles JSON [" + battlesJson + "] loaded!");
 			
 			var battleDTOs = JSON.parse(battlesJson);
 			//var battlesHashMap = {};
@@ -62,19 +64,22 @@ function BattleDao() {
 	};	
 	
 	this.save = function(battleDTO, callback) {
-		_logger.logInfo("BattleDao.save");
+		logger.logInfo("BattleDao.save");
+		if(!callback) { logger.logWarn("BattleDao.save called with undefined callback!"); return; }
 		if(battleDTO) {
-			var fileName = "battles.json";
-			var bucketName = "om-hq-battle";
+			var fileName = "battles.json";			
 			var params = {
 				Body: JSON.stringify(battleDTO),
 				Bucket: bucketName, 
 				Key: fileName
 			};
 			var s3 = new AWS.S3();
+			logger.logInfo("BattleDao.save(1)");			
 			s3.putObject(params, function(err, data) {
-				if (err) { _logger.logError(err, err.stack); callback(err, null); return; }
-				_logger.logInfo(data);
+				if (err) { logger.logError("save:"+err, err.stack); callback(err, null); return; }
+				logger.logInfo("BattleDao.save(2)");
+				logger.logInfo(data);
+				callback(null, true);
 				/*
 				data = {
 				ETag: "\"6805f2cfc46c0f04559748bb039d69ae\"", 
@@ -86,11 +91,11 @@ function BattleDao() {
 			var updateTime = new Date();
 		}
 		else
-			_logger.error("Skipping save of battles as the battles hashmap in invalid!");
+			logger.error("Skipping save of battles as the battles hashmap in invalid!");
 	};	
 	
 	this.construct = function() {
-		_logger.logInfo("BattleDao.construct");
+		logger.logInfo("BattleDao.construct");
   };
   
   _this.construct();
