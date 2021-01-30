@@ -7,11 +7,10 @@ var { MapCache } = require("om-hq-lib");
 var { BattleCache } = require("om-hq-lib");
 var { BattleDAO } = require("om-hq-lib");
 var { HeroDAO } = require("om-hq-lib");
+var { LoginDAO } = require("om-hq-lib");
 var { Logger } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
-const LOGIN_TABLE_NAME = "om-hq-login";
-const HERO_TABLE_NAME = "om-hq-hero"
 const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 
 // Callback is (error, response)
@@ -48,7 +47,7 @@ exports.handler = function(event, context, callback) {
                 
                 Logger.logInfo("Found the following records while checking for existing hero:");
                 Logger.logInfo(JSON.stringify(hero));
-                HeroDAO.setActiveHeroName(requestInput.userName, hero.heroName, (err, updatedHero) => {
+                LoginDAO.setActiveHeroName(requestInput.userName, hero.heroName, (err, updatedHero) => {
                     if(err) { console.error(err); respondError(origin, 500, "Failed to set active hero:" + err, callback); }
                     else respondOK(origin, data, callback);
                 });                   

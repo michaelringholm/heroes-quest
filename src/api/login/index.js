@@ -5,8 +5,6 @@ var { LoginDAO } = require("om-hq-lib");
 var { HeroDAO } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
-const LOGIN_TABLE_NAME = "om-hq-login";
-const HERO_TABLE_NAME = "om-hq-hero"
 const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 
 // Callback is (error, response)
@@ -22,17 +20,7 @@ exports.handler = function(event, context, callback) {
     }
     Logger.logInfo("method="+method);
 
-    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var requestInput = JSON.parse(event.body);
-    
-    /*var params = {
-      TableName: LOGIN_TABLE_NAME,
-      Key: {
-        'userName': {S: requestInput.userName}
-      },
-      //ProjectionExpression: 'ATTRIBUTE_NAME'
-    };*/
-    
     LoginDAO.get(requestInput.userName, function(err, loginDTO) {
        if (err) { Logger.logInfo(err); respondError(origin, 500, err, callback); }
        else {
@@ -67,71 +55,6 @@ exports.handler = function(event, context, callback) {
        }
     });
 };
-
-function getHeroe2s(userGuid, callback) {
-    //AWS.config.update({region: 'eu-central-1'});
-    var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
-    Logger.logInfo("Getting data via query operation...");
-    ddb.query({
-        TableName: HERO_TABLE_NAME,
-        KeyConditionExpression: "userGuid = :userGuid and heroName = :heroName", // "userGuid = :userGuid and heroName = :heroName",
-        ExpressionAttributeValues: {
-            ":userGuid": {S: requestInput.userGuid},
-            ":heroName": {S: requestInput.hero.heroName},            
-        }
-    },
-    (err, heroData) => {
-        if(err) { callback(err, null); return; }
-        Logger.logInfo("Got these data via statement:");
-        Logger.logInfo(JSON.stringify(heroData));
-        callback(null, heroData);
-    })
-
-    /*ddb.scan({
-        TableName: HERO_TABLE_NAME        
-    },
-    (err, heroData) => {
-        if(err) { Logger.logError("Scan failed."); callback(err, null); }
-        Logger.logInfo("Scan operation got hero data:");
-        Logger.logInfo(JSON.stringify(heroData));
-        callback(null, { herores: heroData.Items });
-    });*/
-    
-    /*ddb.query({
-        TableName: HERO_TABLE_NAME
-    },
-    (err, data) => {
-        Logger.logInfo("got hero data");
-        Logger.logInfo(JSON.stringify(data));
-    });*/
-
-    /*ddb.executeStatement({
-        Statement: "select * from om-hq-hero where userGuid=:userGuid order by heroName",
-        Parameters: [{ }]
-    }, 
-    (err, data) => {
-
-    });*/
-    /*var params = {
-      TableName: HERO_TABLE_NAME,
-      Key: {
-        'userGuid': {S: userGuid},
-        'heroName': {S: userGuid}
-      },
-      //ProjectionExpression: 'ATTRIBUTE_NAME'
-    };
-    
-    ddb.getItem(params, function(err, heroData) {
-       if (err) { Logger.logError(err); throw err; }
-       else {
-            if(heroData == null || heroData.Item == null || heroData.Item.score == null)
-                callback({}); // No heroes created yet
-            else
-                callback(heroData.Item);
-       }
-    });*/
-}
 
 function tweakOrigin(origin) {
     var tweakedOrigin = "-";
