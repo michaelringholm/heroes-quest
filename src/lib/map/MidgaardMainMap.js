@@ -3,7 +3,7 @@
 var _logger = require('../common/Logger.js');
 var MobFactory = require('../mob/MobFactory.js');
 var Location = require('./Location.js');
-var _mapDao = require('./MapDao.js');
+var _mapDao = require('./MapDAO.js');
 //var MobFactory = require('../mob/MobFactory.js');
 
 function MidgaardMainMap() {
@@ -83,18 +83,12 @@ function MidgaardMainMap() {
 		}
 	};
 	
-	this.buildMap = function(callback) {
+	this.build = function(mapDTO) {
 		_logger.logInfo("MidgaardMainMap.construct");
-		var mob = mobFactory.create();
-		_mapDao.load(_this.key, (err, rawMap) => {
-			if(err) { callback(err, null); return; }
-			_this.mapMatrix = rawMap.match(/[^\r\n]+/g);
-			_mapDao.loadDefinition(_this.key, (err, mapDefinition) => {
-				if(err) { callback(err, null); return; }
-				_this.mapDefinition = JSON.parse(mapDefinition);
-				callback(null, {});
-		   });
-		});
+		_logger.logInfo("mapDTO="+ JSON.stringify(mapDTO));
+		//var mob = mobFactory.create();
+		_this.mapMatrix = mapDTO.rawMap.match(/[^\r\n]+/g);
+		_this.mapDefinition = JSON.parse(mapDTO.mapDefinition);
 	};
 }
 

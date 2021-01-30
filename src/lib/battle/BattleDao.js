@@ -9,86 +9,71 @@ function BattleDao() {
 	var bucketName = appContext.PREFIX+"battle";
 	var s3 = new AWS.S3();
 		
-	var exists = function() {
+	this.exists = function(fileName, callback) {
 		logger.logInfo("BattleDao.exists");
-		var fs = require("fs");
-		var fileName = "./data/battles/" + "battles" + '.json';
-			
-		var fileFound = true;
-		try {
-			fs.statSync(fileName);
-			logger.logInfo("File [" + fileName + "] exists!");
-		}
-		catch(e) {
-			fileFound = false;
-			logger.logWarn("File [" + fileName + "] does not exist!");
-		}
-		return fileFound;
+		s3.listObjectsV2(
+			{
+				Bucket: bucketName,
+				Prefix: fileName
+			}, 
+			(err, s3Objects) => 
+			{
+				if (err) { _logger.logError("exists:"+err, err.stack); callback(err, false); return; }				
+				logger.logInfo("Objects in bucket are [" + JSON.stringify(s3Objects) + "]");
+				if(s3Objects.KeyCount<1) { callback(null, false); return; }
+				for(var i=0; i<s3Objects.Contents.length;i++) {					
+					if(s3Objects.Contents[i].Key == fileName) { callback(null, true); return; }
+				}
+				callback(null, s3Objects.KeyCount==1);
+				return;
+			}
+		);
 	};
 	
-	this.load = function(callback) {
+	this.load = function(heroKey, callback) {
 		logger.logInfo("BattleDao.load");
-		var fileName = "battles.json";
-		var params = {
-			Bucket: bucketName, 
-			Key: fileName
-		};
-
-		var s3 = new AWS.S3();
-		s3.getObject(params, function(err, data) {
-			if (err) { logger.logError(err, err.stack); callback(err, null); return; }
-			console.log(data);
-			callback();
-			 /*
-			 data = {
-			  ETag: "\"6805f2cfc46c0f04559748bb039d69ae\"", 
-			  ServerSideEncryption: "AES256", 
-			  VersionId: "Ri.vC6qVlA4dEnjgRV4ZHsHoFIjqEMNt"
-			 }
-			 */
-		});		
-		
-		/*if(exists()) {
-			var battlesJson = fs.readFileSync(fileName).toString();
-			logger.logInfo("Battles JSON [" + battlesJson + "] loaded!");
-			
-			var battleDTOs = JSON.parse(battlesJson);
-			//var battlesHashMap = {};
-			//for(var battleDTOIndex in battleDTOs) {
-			//	battlesHashMap[battleDTOIndex] = BattleFactory.Create(battleDTOs[battleDTOIndex]);
-			//}
-			return battleDTOs;
-		}
-		else
-			return {};*/
-	};	
-	
-	this.save = function(battleDTO, callback) {
-		logger.logInfo("BattleDao.save");
-		if(!callback) { logger.logWarn("BattleDao.save called with undefined callback!"); return; }
-		if(battleDTO) {
-			var fileName = "battles.json";			
+		var fileName = "battle-" + heroKey + ".json";
+		this.exists(fileName, (err, exists)=> {
+			if (err) { logger.logError("load:"+err, err.stack); callback(err, false); return; }
+			if (!exists) { logger.logError("Battle file [" + fileName + "] does not exist!"); callback("Battle file [" + fileName + "] does not exist!", null); return; }
 			var params = {
-				Body: JSON.stringify(battleDTO),
 				Bucket: bucketName, 
 				Key: fileName
 			};
+
 			var s3 = new AWS.S3();
-			logger.logInfo("BattleDao.save(1)");			
-			s3.putObject(params, function(err, data) {
-				if (err) { logger.logError("save:"+err, err.stack); callback(err, null); return; }
-				logger.logInfo("BattleDao.save(2)");
-				logger.logInfo(data);
-				callback(null, true);
-				/*
-				data = {
-				ETag: "\"6805f2cfc46c0f04559748bb039d69ae\"", 
-				ServerSideEncryption: "AES256", 
-				VersionId: "Ri.vC6qVlA4dEnjgRV4ZHsHoFIjqEMNt"
-				}
-				*/
+			s3.getObject(params, function(err, s3Object) {
+				if (err) { logger.logError(err, err.stack); callback(err, null); return; }
+				logger.logInfo(JSON.stringify(s3Object));
+				var battleDTO = JSON.parse(s3Object.Body);
+				callback(null, battleDTO);
+			});		
+		});
+	};	
+	
+	this.save = function(heroKey, battleDTO, callback) {
+		logger.logInfo("BattleDao.save");
+		if(!callback) { logger.logWarn("BattleDao.save called with undefined callback!"); return; }
+		if(battleDTO) {
+			var fileName = "battle-" + heroKey + ".json";
+			this.exists(fileName, (err, exists)=> {
+				if (err) { logger.logError("load:"+err, err.stack); callback(err, false); return; }
+				if (!exists) { logger.logError("Battle file [" + fileName + "] does not exist!"); callback("Battle file [" + fileName + "] does not exist!", null); return; }
+				var params = {
+					Body: JSON.stringify(battleDTO),
+					Bucket: bucketName, 
+					Key: fileName
+				};
+				var s3 = new AWS.S3();
+				logger.logInfo("BattleDao.save(1)");			
+				s3.putObject(params, function(err, data) {
+					if (err) { logger.logError("save:"+err, err.stack); callback(err, null); return; }
+					logger.logInfo("BattleDao.save(2)");
+					logger.logInfo(data);
+					callback(null, true);
+				});
+				var updateTime = new Date();
 			});
-			var updateTime = new Date();
 		}
 		else
 			logger.error("Skipping save of battles as the battles hashmap in invalid!");

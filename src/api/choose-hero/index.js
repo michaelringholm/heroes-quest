@@ -3,8 +3,11 @@ const UUID = require('uuid');
 const FV = require('./field-verifier.js');
 var { MidgaardMainMap } = require("om-hq-lib");
 var { MobFactory } = require("om-hq-lib");
-var { MapDictionary } = require("om-hq-lib");
+var { MapCache } = require("om-hq-lib");
 var { BattleCache } = require("om-hq-lib");
+var { BattleDAO } = require("om-hq-lib");
+var { HeroDAO } = require("om-hq-lib");
+var { Logger } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
@@ -22,78 +25,37 @@ exports.handler = function(event, context, callback) {
         preFlightResponse(origin, referer, callback);
         return;
     }
-    console.log("method="+method);
+    Logger.logInfo("method="+method);
 
     //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var requestInput = JSON.parse(event.body);    
     
-    getHero(requestInput, (err, hero) => {
+    HeroDAO.load(requestInput.userGuid, requestInput.hero.heroName, (err, hero) => {
         if(err) { console.error(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }
 
-        //var hero = heroData.Items[0];
         hero.heroKey = hero.userGuid+"#"+hero.heroName;
-        if(hero != null && hero.currentMapKey == null) hero.currentMapKey = "midgaard-main";
+        if(hero != null && hero.currentMapKey == null || hero.currentMapKey == "" ) hero.currentMapKey = "midgaard-main";
         if(hero != null && hero.currentCoordinates == null) hero.currentCoordinates = {x:0,y:0};
-        //TODO        
-        var currentBattle = BattleCache[hero.heroKey];
-
-        var map = new MidgaardMainMap();
-        var mapDefinition = "";
-        var rawMap = "";
-        map.buildMap(mapDefinition, rawMap);
-        MapDictionary.addMap(map);
-        var currentMap = MapDictionary.getMap(hero.currentMapKey);
-        
-        var location = currentMap.getLocation(hero.currentCoordinates);
-        var data = { hero: hero, battle: currentBattle, map: currentMap, status: 'Your active hero is now [' + hero.heroKey + ']!' };
-        //TODO
-        
-        console.log("Found the following records while checking for existing hero:");
-        console.log(JSON.stringify(hero));
-        updateActiveHero(requestInput, hero, (err, updatedHero) => {
-            if(err) { console.error(err); respondError(origin, 500, "Failed to set active hero:" + err, callback); }
-            else respondOK(origin, data, callback);
+        BattleDAO.load(hero.heroKey, (err, battleDTO) => {
+            if(err) { console.error(err); respondError(origin, 500, "Failed to load battle:" + err, callback); }
+            Logger.logInfo("hero="+JSON.stringify(hero));
+            MapCache.getMap(hero.currentMapKey, (err, mapDTO) => {
+                if(err) { console.error(err); respondError(origin, 500, "Failed to load map:" + err, callback); }
+                var map = new MidgaardMainMap();
+                map.build(mapDTO);
+                var location = map.getLocation(hero.currentCoordinates);
+                var data = { hero: hero, battle: battleDTO, map: map, status: 'Your active hero is now [' + hero.heroKey + ']!' };
+                
+                Logger.logInfo("Found the following records while checking for existing hero:");
+                Logger.logInfo(JSON.stringify(hero));
+                HeroDAO.setActiveHeroName(requestInput.userName, hero.heroName, (err, updatedHero) => {
+                    if(err) { console.error(err); respondError(origin, 500, "Failed to set active hero:" + err, callback); }
+                    else respondOK(origin, data, callback);
+                });                   
+            });
         });
-        //if(heroData != null && heroData.Count > 0) { console.error("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }                    
-        //else {
-            // TODO
-            /*createHero(requestInput, (err,newHeroData) => {
-                if(err) { console.error(err); respondError(origin, 500, "Failed to create hero(2):" + err, callback); }
-                else respondOK(origin, newHeroData, callback);
-            });*/
-        //}
     });
 };
-
-function updateActiveHero(requestInput, hero, callback) {
-    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
-    var docClient = new AWS.DynamoDB.DocumentClient();
-    
-    var params = {
-        TableName:LOGIN_TABLE_NAME,
-        Key:{
-            "userName": requestInput.userName
-        },
-        UpdateExpression: "set activeHeroName = :activeHeroName",
-        ExpressionAttributeValues:{
-            ":activeHeroName":hero.heroName
-        },
-        ReturnValues:"ALL_NEW"
-    };
-
-    docClient.update(params, (err, updatedTableItem) => {
-        if(err) { callback(err, null); return; }
-        //hero.activeHeroName = hero.heroName;
-        var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
-        //var hero = AWS.DynamoDB.Converter.unmarshall(hero); // Seems only new fields are in Dynamo format
-        /*console.log("RETURNED FROM UPDATE STATEMENT");
-        console.log(JSON.stringify(updatedTableItem));
-        console.log("RETURNED FROM UNMARSHALL");
-        console.log(JSON.stringify(updatedHero));*/
-        hero.activeHero = updatedHero.activeHero;
-        callback(null, hero);
-    })
-}
 
 function createMap(requestInput, callback) {
     var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid","hero.heroName","hero.heroClass"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
@@ -138,7 +100,7 @@ function getHeroes(requestInput, callback) {
     })
 }
 
-function getHero(requestInput, callback) {
+/*function getHero(requestInput, callback) {
     var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid","hero.heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
     //AWS.config.update({region: 'eu-central-1'});
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
@@ -159,7 +121,7 @@ function getHero(requestInput, callback) {
         var hero = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
         callback(null, hero);
     })
-}
+}*/
 
 function tweakOrigin(origin) {
     var tweakedOrigin = "-";

@@ -2,10 +2,10 @@ var logger = require('../common/Logger.js');
 var Battle = require('../battle/Battle.js');
 var BattleDTO = require('../battle/BattleDTO.js');
 var _battleDao = require('../battle/BattleDao.js');
-var _heroDao = require('../hero/HeroDao.js');
+var _heroDao = require('./HeroDAO.js');
 var Coordinate = require('../map/Coordinate.js');
-var _mapDao = require('../map/MapDao.js');
-var _mapFactory = require('../map/MapDictionary.js');
+var _mapDao = require('../map/MapDAO.js');
+var _mapFactory = require('../map/MapCache.js');
 var _itemFactory = require('../item/ItemFactory.js');
 
 module.exports = function Hero(heroDTO) {	

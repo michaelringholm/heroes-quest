@@ -1,6 +1,8 @@
 const AWS = require("aws-sdk");
-const UUID = require('uuid');
 const FV = require('./field-verifier.js');
+var { Logger } = require("om-hq-lib");
+var { LoginDAO } = require("om-hq-lib");
+var { HeroDAO } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
@@ -9,7 +11,7 @@ const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
-    console.log(JSON.stringify(event));
+    Logger.logInfo(JSON.stringify(event));
     //AWS.config.update({region: 'eu-central-1'});
     var method = event.requestContext.http.method;
     var origin = event.headers.origin;
@@ -18,54 +20,47 @@ exports.handler = function(event, context, callback) {
         preFlightResponse(origin, referer, callback);
         return;
     }
-    console.log("method="+method);
+    Logger.logInfo("method="+method);
 
-    var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var requestInput = JSON.parse(event.body);
     
-    var params = {
+    /*var params = {
       TableName: LOGIN_TABLE_NAME,
       Key: {
         'userName': {S: requestInput.userName}
       },
       //ProjectionExpression: 'ATTRIBUTE_NAME'
-    };
+    };*/
     
-    console.log("Step(1)");
-    ddb.getItem(params, function(err, userData) {
-        console.log("Step(2)");
-       if (err) { console.log(err); respondError(origin, 500, err, callback); }
+    LoginDAO.get(requestInput.userName, function(err, loginDTO) {
+       if (err) { Logger.logInfo(err); respondError(origin, 500, err, callback); }
        else {
-            console.log("Step(3)");
-            console.log(JSON.stringify(userData));
-            if(userData == null || userData.Item == null || userData.Item.password == null) {
-                console.log("Step(4)");
-                console.error("User [" + requestInput.userName + "] not found");
+            Logger.logInfo("loginDTO=" + JSON.stringify(loginDTO));
+            if(loginDTO == null || loginDTO.userName == null || loginDTO.password == null) {
+                Logger.logError("User [" + requestInput.userName + "] not found");
                 respondError(origin, 401, "Invalid login", callback);
             }
             else {
-                console.log("Step(5)");
-                if(userData.Item.password.S == requestInput.password) {
-                    console.log("Password accepted");
-                    updateToken(requestInput, userData.Item.userGuid.S, ddb, function(err, tokenData) {
-                        console.log("Step(6)");
-                        if (err) { console.log(err); respondError(origin, 500, err, callback); }
+                if(loginDTO.password == requestInput.password) {
+                    Logger.logInfo("Password accepted");
+                    LoginDAO.updateToken(loginDTO, function(err, updatedLoginDTO) {
+                        if (err) { Logger.logInfo(err); respondError(origin, 500, err, callback); }
                         else {
-                            console.log("Step(7)");
-                            getHeroes(userData.Item.userGuid.S, function(err, heroesData) {
-                                if (err) { console.log(err); respondError(origin, 500, err, callback); }
+                            HeroDAO.getAll(loginDTO.userGuid, function(err, heroesData) {
+                                if (err) { Logger.logInfo(err); respondError(origin, 500, err, callback); }
                                 var responseData = { heroes: heroesData.Items };
-                                console.log("Received this data from getHeroes():", JSON.stringify(heroesData));
+                                Logger.logInfo("Received this data from getHeroes():", JSON.stringify(heroesData));
                                 responseData.maxTurns = MAX_TURNS;
-                                responseData.accessToken = tokenData.accessToken;
-                                responseData.userGuid = tokenData.userGuid;
+                                responseData.accessToken = updatedLoginDTO.accessToken;
+                                responseData.userGuid = updatedLoginDTO.userGuid;
                                 respondOK(origin, responseData, callback);
                             });
                         }
                     });
                 }
                 else {
-                    console.error("Wrong password, was [" + requestInput.password + "] exptected [" + userData.Item.password.S + "]");
+                    Logger.logError("Wrong password, was [" + requestInput.password + "] exptected [" + loginDTO.password.S + "]");
                     respondError(origin, 401, "Invalid login", callback);
                 }
             }
@@ -73,54 +68,11 @@ exports.handler = function(event, context, callback) {
     });
 };
 
-function updateToken(login, userGuid, ddb, callback) {
-    var newToken = UUID.v4();
-    var params = {
-        TableName: LOGIN_TABLE_NAME,
-        Item: {
-          'userName': {S: login.userName},
-          'userGuid': {S: userGuid},
-          'password': {S: login.password},
-          'accessToken': {S: newToken}
-        },
-        ReturnConsumedCapacity: "TOTAL", 
-        //ProjectionExpression: 'ATTRIBUTE_NAME'
-    };    
-    ddb.putItem(params, function(err, userData) {
-        if (err) { console.log(err); callback(err, null); }        
-        console.log("New token generated");
-        callback(null, { "accessToken": newToken, "userGuid": userGuid });
-    });    
-}
-
-function getHeroes(userGuid, callback) {
-    var missingFields = new FV.FieldVerifier().Verify({userGuid:userGuid}, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
-    //AWS.config.update({region: 'eu-central-1'});
-    var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    console.log("Calling getHeroes via query...");
-    
-    // https://docs.amazonaws.cn/en_us/sdk-for-javascript/v2/developer-guide/dynamodb-example-query-scan.html
-    // https://www.fernandomc.com/posts/eight-examples-of-fetching-data-from-dynamodb-with-node/
-    ddb.query({
-        TableName: HERO_TABLE_NAME,
-        KeyConditionExpression: "userGuid = :userGuid",
-        ExpressionAttributeValues: {
-            ":userGuid": {S: userGuid}
-        }
-    },
-    (err, heroData) => {
-        if(err) { callback(err, null); return; }
-        console.log("Got these data via query:");
-        console.log(JSON.stringify(heroData));
-        callback(null, heroData);
-    })
-}
-
 function getHeroe2s(userGuid, callback) {
     //AWS.config.update({region: 'eu-central-1'});
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
-    console.log("Getting data via query operation...");
+    Logger.logInfo("Getting data via query operation...");
     ddb.query({
         TableName: HERO_TABLE_NAME,
         KeyConditionExpression: "userGuid = :userGuid and heroName = :heroName", // "userGuid = :userGuid and heroName = :heroName",
@@ -131,8 +83,8 @@ function getHeroe2s(userGuid, callback) {
     },
     (err, heroData) => {
         if(err) { callback(err, null); return; }
-        console.log("Got these data via statement:");
-        console.log(JSON.stringify(heroData));
+        Logger.logInfo("Got these data via statement:");
+        Logger.logInfo(JSON.stringify(heroData));
         callback(null, heroData);
     })
 
@@ -140,9 +92,9 @@ function getHeroe2s(userGuid, callback) {
         TableName: HERO_TABLE_NAME        
     },
     (err, heroData) => {
-        if(err) { console.error("Scan failed."); callback(err, null); }
-        console.log("Scan operation got hero data:");
-        console.log(JSON.stringify(heroData));
+        if(err) { Logger.logError("Scan failed."); callback(err, null); }
+        Logger.logInfo("Scan operation got hero data:");
+        Logger.logInfo(JSON.stringify(heroData));
         callback(null, { herores: heroData.Items });
     });*/
     
@@ -150,8 +102,8 @@ function getHeroe2s(userGuid, callback) {
         TableName: HERO_TABLE_NAME
     },
     (err, data) => {
-        console.log("got hero data");
-        console.log(JSON.stringify(data));
+        Logger.logInfo("got hero data");
+        Logger.logInfo(JSON.stringify(data));
     });*/
 
     /*ddb.executeStatement({
@@ -171,7 +123,7 @@ function getHeroe2s(userGuid, callback) {
     };
     
     ddb.getItem(params, function(err, heroData) {
-       if (err) { console.error(err); throw err; }
+       if (err) { Logger.logError(err); throw err; }
        else {
             if(heroData == null || heroData.Item == null || heroData.Item.score == null)
                 callback({}); // No heroes created yet

@@ -4,7 +4,7 @@ var AWS = require("aws-sdk");
 //var AppContext = require('./context/AppContext.js');
 //var _appContext = new AppContext();
 
-function MapDao() {
+function MapDAO() {
 	var _this = this;
 	var bucketName = appContext.PREFIX+"map";
 	var s3 = new AWS.S3();
@@ -43,7 +43,7 @@ function MapDao() {
 			s3.getObject(params, (err, rawMap) => {
 				if (err) { _logger.logError("load:"+err, err.stack); callback(err, null); return; }
 				_logger.logInfo("Map [" + mapName + "] loaded!");
-				_logger.logInfo("Raw map is [" + rawMap.Body + "]!");
+				_logger.logInfo("Raw map is [" + rawMap.Body.toString() + "]!");
 				callback(null, rawMap.Body.toString());
 				return;
 			});		
@@ -78,4 +78,4 @@ function MapDao() {
   _this.construct();
 }
 
-module.exports = new MapDao();
+module.exports = new MapDAO();

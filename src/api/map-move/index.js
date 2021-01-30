@@ -3,9 +3,10 @@ const UUID = require('uuid');
 const FV = require('./field-verifier.js');
 var { MidgaardMainMap } = require("om-hq-lib");
 var { MobFactory } = require("om-hq-lib");
-var { MapDictionary } = require("om-hq-lib");
+var { MapCache } = require("om-hq-lib");
 var { BattleCache } = require("om-hq-lib");
 var { Hero } = require("om-hq-lib");
+var { HeroDAO } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
@@ -28,10 +29,10 @@ exports.handler = function(event, context, callback) {
     //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var requestInput = JSON.parse(event.body);
     
-    getActiveHeroName(requestInput, (err, loginDTO) => {
+    HeroDAO.getActiveHeroName(requestInput.userName, (err, loginDTO) => {
         if(err) { console.error(err); respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
         requestInput.activeHeroName = requestInput;
-        getHero(loginDTO, (err, heroDTO) => {
+        HeroDAO.load(loginDTO.userGuid, loginDTO.hero.heroName, (err, heroDTO) => {
             if(err) { console.error(err); respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
             heroDTO.heroKey = heroDTO.userGuid+"#"+heroDTO.heroName;
             if(heroDTO != null && heroDTO.currentMapKey == null) heroDTO.currentMapKey = "midgaard-main";
@@ -86,10 +87,6 @@ exports.handler = function(event, context, callback) {
         });
     });
 };
-
-function getBattle(heroKey, callback) {
-
-}
 
 function updateBattle(requestInput, heroDTO, callback) {
     console.log("updateBattle...");
@@ -169,6 +166,7 @@ function getActiveHeroName(requestInput, callback) {
     })
 }
 
+/*
 function getHero(loginDTO, callback) {
     var missingFields = new FV.FieldVerifier().Verify(loginDTO, ["userGuid","activeHeroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
     //AWS.config.update({region: 'eu-central-1'});
@@ -190,7 +188,7 @@ function getHero(loginDTO, callback) {
         var heroDTO = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
         callback(null, heroDTO);
     })
-}
+}*/
 
 function tweakOrigin(origin) {
     var tweakedOrigin = "-";
