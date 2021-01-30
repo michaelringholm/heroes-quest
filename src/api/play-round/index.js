@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const UUID = require('uuid');
-const ATV = require('atv');
+var HQLIB = require("om-hq-lib");
+var { HeroDAO } = require("om-hq-lib");
 
 const maxTurns = 50;
 const deckSize = 12;
@@ -21,41 +22,9 @@ exports.handler = function(event, context, callback) {
     console.log("method="+method);
       
     var userInfo = JSON.parse(event.body);
-    ATV.validateAccessToken(userInfo.userName, userInfo.accessToken, function(valid, reason) {
-        if(!valid) respondError(401, reason, callback);
-        var round = playRound(userInfo, function(round) {
-            if(round.turnsUsed < maxTurns) {
-                var params = {
-                    TableName: 'xmas-fun-score',
-                    Key: { "userGuid" : userInfo.userGuid },
-                    UpdateExpression: 'set score = :score, turnsUsed = if_not_exists(turnsUsed, :start) + :inc',
-                    /*ConditionExpression: '#a < :MAX',
-                    ExpressionAttributeNames: {'#a' : 'Sum'},*/
-                    ExpressionAttributeValues: {
-                    ':score' : round.totalScore,
-                    ':inc': 1,
-                    ':start': 0,
-                    }
-                };
-                
-                var documentClient = new AWS.DynamoDB.DocumentClient();          
-                documentClient.update(params, function(err, data) {
-                    if (err) { console.log(err); respondError(500, err, callback); }
-                    else {  
-                        if(round.turnsUsed == maxTurns-1) { 
-                            insertHighScore(userInfo, round, (err) => {
-                                if (err) { console.log(err); respondError(500, err, callback); }
-                                else { ++round.turnsUsed; console.log(data); respondOK(round, callback) };
-                            });
-                        }
-                        else { ++round.turnsUsed; console.log(data); respondOK(round, callback); }                     
-                    }
-                });
-            }
-            else
-                respondOK(round, callback);           
-        });    
-    });
+    var missingFields = new HQLIB.FieldVerifier.FieldVerifier().Verify(userInfo, ["userName", "accessToken"]);
+    if(missingFields.length>0) respondError(401, reason, callback);
+    respondOK(origin, null, callback);   
 };
 
 function insertHighScore(userInfo, round, callback) {
@@ -205,7 +174,7 @@ function preFlightResponse(origin, referer, callback) {
     callback(null, response);
 }
 
-function respondOK(data, callback) {
+function respondOK(origin, data, callback) {
     const response = {
         statusCode: 200,
         body: JSON.stringify({ response: 'Round played', data: data }),

@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "atv": "^0.1.2",
     "aws-sdk": "^2.815.0",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "om-hq-lib": "file://../../lib"
   }
 }
