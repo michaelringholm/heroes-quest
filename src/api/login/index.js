@@ -35,10 +35,11 @@ exports.handler = function(event, context, callback) {
                     LoginDAO.updateToken(loginDTO, function(err, updatedLoginDTO) {
                         if (err) { Logger.logInfo(err); respondError(origin, 500, err, callback); }
                         else {
-                            HeroDAO.getAll(loginDTO.userGuid, function(err, heroesData) {
+                            HeroDAO.getAll(loginDTO.userGuid, function(err, heroDTOs) {
                                 if (err) { Logger.logInfo(err); respondError(origin, 500, err, callback); }
-                                var responseData = { heroes: heroesData.Items };
-                                Logger.logInfo("Received this data from getHeroes():", JSON.stringify(heroesData));
+                                var responseData = { heroes: heroDTOs };
+                                Logger.logInfo("Received this data from HeroDAO.getAll():");
+                                Logger.logInfo(JSON.stringify(heroDTOs));
                                 responseData.maxTurns = MAX_TURNS;
                                 responseData.accessToken = updatedLoginDTO.accessToken;
                                 responseData.userGuid = updatedLoginDTO.userGuid;

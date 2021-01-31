@@ -7,6 +7,8 @@ var { MapCache } = require("om-hq-lib");
 var { BattleCache } = require("om-hq-lib");
 var { Hero } = require("om-hq-lib");
 var { HeroDAO } = require("om-hq-lib");
+var { LoginDAO } = require("om-hq-lib");
+var { Logger } = require("om-hq-lib");
 
 const MAX_TURNS = 50;
 const LOGIN_TABLE_NAME = "om-hq-login";
@@ -15,7 +17,7 @@ const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
-    console.log(JSON.stringify(event));
+    Logger.logInfo(JSON.stringify(event));
     if(AWS.config.region == null) AWS.config.update({region: 'eu-north-1'});
     var method = event.requestContext.http.method;
     var origin = event.headers.origin;
@@ -24,72 +26,74 @@ exports.handler = function(event, context, callback) {
         preFlightResponse(origin, referer, callback);
         return;
     }
-    console.log("method="+method);
+    Logger.logInfo("method="+method);
 
     //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var requestInput = JSON.parse(event.body);
     
-    HeroDAO.getActiveHeroName(requestInput.userName, (err, loginDTO) => {
-        if(err) { console.error(err); respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
-        requestInput.activeHeroName = requestInput;
-        HeroDAO.load(loginDTO.userGuid, loginDTO.hero.heroName, (err, heroDTO) => {
-            if(err) { console.error(err); respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
+    LoginDAO.get(requestInput.userName, (err, loginDTO) => {
+        if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
+        //requestInput.activeHeroName = requestInput;
+        HeroDAO.get(loginDTO.userGuid, loginDTO.activeHeroName, (err, heroDTO) => {
+            if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
             heroDTO.heroKey = heroDTO.userGuid+"#"+heroDTO.heroName;
             if(heroDTO != null && heroDTO.currentMapKey == null) heroDTO.currentMapKey = "midgaard-main";
             if(heroDTO != null && heroDTO.currentCoordinates == null) heroDTO.currentCoordinates = {x:0,y:0};
 
-            var map = new MidgaardMainMap();
-            map.buildMap((err) => {
-                if(err) { console.error(err); respondError(origin, 500, "Failed to build map:" + err, callback); return; }
-                MapDictionary.addMap(map);
-                var currentMap = MapDictionary.getMap(heroDTO.currentMapKey);
-                
-                var location = currentMap.getLocation(heroDTO.currentCoordinates);
+            MapCache.getMap(heroDTO.currentMapKey, (err, mapDTO) => {
+                if(err) { Logger.logError(err); respondError(origin, 500, "Failed to load map:" + err, callback); return; }
+                var map = new MidgaardMainMap();
+                map.build(mapDTO);
+                //var location = map.getLocation(hero.currentCoordinates);
+                //var data = { hero: hero, battle: battleDTO, map: map, status: 'Your active hero is now [' + hero.heroKey + ']!' };
+                //MapDictionary.addMap(map);
+                //var currentMap = MapDictionary.getMap(heroDTO.currentMapKey);
+                //var location = currentMap.getLocation(heroDTO.currentCoordinates);
                 //var data = { heroDTO: heroDTO, battle: currentBattle, map: currentMap, status: 'Your active heroDTO is now [' + heroDTO.heroKey + ']!' };
                 var direction = requestInput.direction;
                 if (direction == "west" || direction == "east" || direction == "north" || direction == "south") {
                     if (heroDTO.inBattle) {
                         getBattle(heroDTO.heroKey, (err, battleDTO) => {
-                            if(err) { console.error(err, err.stack); respondError(origin, 500, "failed to get battle:" + err, callback); return; }
+                            if(err) { Logger.logError(err, err.stack); respondError(origin, 500, "failed to get battle:" + err, callback); return; }
                             respondOK(origin, battleDTO, callback);
                             return;
                         });
                     }
                     else {
                         heroDTO.currentCoordinates;
-                        console.log("coords are:", heroDTO.currentCoordinates);
-                        new Hero(heroDTO).move(requestInput, heroDTO, direction, currentMap, (err, moveResult) => {
-                            if(err) { console.error(err); respondError(origin, 500, "Failed to move" + err, callback); return; }
+                        Logger.logInfo("coords are:", heroDTO.currentCoordinates);
+                        new Hero(heroDTO).move(requestInput, heroDTO, direction, map, (err, moveResult) => {
+                            if(err) { Logger.logError(err); respondError(origin, 500, "Failed to move" + err, callback); return; }
                             if (moveResult.newLocation) {
                                 //_heroDao.save(serverLogin.activeHero);
                                 //var battle = _battleCache[serverLogin.activeHero.heroId];
                                 if (moveResult.battle) {
                                     updateBattle(requestInput, heroDTO, (err, updatedHero) => {
-                                        if(err) { console.error(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
+                                        if(err) { Logger.logError(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
                                         respondOK(origin, moveResult, callback);
                                         return;
                                     });
                                 }
                                 else {
                                     updateMapLocation(requestInput, heroDTO, (err, updatedHero) => {
-                                        if(err) { console.error(err); respondError(origin, 500, "Failed to update location:" + err, callback); return; }
+                                        if(err) { Logger.logError(err); respondError(origin, 500, "Failed to update location:" + err, callback); return; }
                                         respondOK(origin, moveResult, callback);
                                         return;
                                     });
                                 }
                             }
-                            else { console.error(err); respondError(origin, 500, "Invalid location!", callback); return; }   
+                            else { Logger.logError(err); respondError(origin, 500, "Invalid location!", callback); return; }   
                         });                           
                     }
                 }
-                else { console.error("Invalid direction [" + direction + "]!"); respondError(origin, 500, "Invalid direction [" + direction + "]!", callback); return; }            
+                else { Logger.logError("Invalid direction [" + direction + "]!"); respondError(origin, 500, "Invalid direction [" + direction + "]!", callback); return; }            
             });
         });
     });
 };
 
 function updateBattle(requestInput, heroDTO, callback) {
-    console.log("updateBattle...");
+    Logger.logInfo("updateBattle...");
     var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
     var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
     var docClient = new AWS.DynamoDB.DocumentClient();
@@ -116,7 +120,7 @@ function updateBattle(requestInput, heroDTO, callback) {
 }
 
 function updateMapLocation(requestInput, heroDTO, callback) {
-    console.log("updateMapLocation...");
+    Logger.logInfo("updateMapLocation...");
     var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
     var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
     var docClient = new AWS.DynamoDB.DocumentClient();
@@ -138,17 +142,17 @@ function updateMapLocation(requestInput, heroDTO, callback) {
         if(err) { callback(err, null); return; }
         var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
         heroDTO.activeHero = updatedHero.activeHero;
-        console.log("updateMapLocation OK!");
+        Logger.logInfo("updateMapLocation OK!");
         callback(null, heroDTO);
     })
 }
 
 function getActiveHeroName(requestInput, callback) {
-    console.log("getActiveHeroName...");
+    Logger.logInfo("getActiveHeroName...");
     var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
     //AWS.config.update({region: 'eu-central-1'});
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    console.log("Calling getActiveHeroName via statement...");
+    Logger.logInfo("Calling getActiveHeroName via statement...");
     
     ddb.query({
         TableName: LOGIN_TABLE_NAME,
@@ -159,8 +163,8 @@ function getActiveHeroName(requestInput, callback) {
     },
     (err, loginItems) => {
         if(err) { callback(err, null); return; }
-        console.log("Got these data via statement:");
-        console.log(JSON.stringify(loginItems));
+        Logger.logInfo("Got these data via statement:");
+        Logger.logInfo(JSON.stringify(loginItems));
         var loginDTO = AWS.DynamoDB.Converter.unmarshall(loginItems.Items[0]); // Seems only new fields are in Dynamo format
         callback(null, loginDTO);
     })
@@ -171,7 +175,7 @@ function getHero(loginDTO, callback) {
     var missingFields = new FV.FieldVerifier().Verify(loginDTO, ["userGuid","activeHeroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
     //AWS.config.update({region: 'eu-central-1'});
     var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    console.log("Calling getHero via statement...");
+    Logger.logInfo("Calling getHero via statement...");
     
     ddb.query({
         TableName: HERO_TABLE_NAME,
@@ -183,8 +187,8 @@ function getHero(loginDTO, callback) {
     },
     (err, heroData) => {
         if(err) { callback(err, null); return; }
-        console.log("Got these data via statement:");
-        console.log(JSON.stringify(heroData));
+        Logger.logInfo("Got these data via statement:");
+        Logger.logInfo(JSON.stringify(heroData));
         var heroDTO = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
         callback(null, heroDTO);
     })

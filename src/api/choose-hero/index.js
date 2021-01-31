@@ -30,13 +30,13 @@ exports.handler = function(event, context, callback) {
     var requestInput = JSON.parse(event.body);    
     
     HeroDAO.get(requestInput.userGuid, requestInput.hero.heroName, (err, hero) => {
-        if(err) { console.error(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }
+        if(err) { Logger.logError(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }
         hero.heroKey = hero.userGuid+"#"+hero.heroName;
-        if(hero != null && hero.currentMapKey == null || hero.currentMapKey == "" ) hero.currentMapKey = "midgaard-main";
-        if(hero != null && hero.currentCoordinates == null) hero.currentCoordinates = {x:0,y:0};
+        //if(hero != null && hero.currentMapKey == null || hero.currentMapKey == "" ) hero.currentMapKey = "midgaard-main";
+        //if(hero != null && hero.currentCoordinates == null) hero.currentCoordinates = {x:0,y:0};
         if(hero.isInBattle) {
             BattleDAO.load(origin, hero.heroKey, (err, battleDTO) => {
-                if(err) { console.error(err); respondError(origin, 500, "Failed to load battle:" + err, callback); }
+                if(err) { Logger.logError(err); respondError(origin, 500, "Failed to load battle:" + err, callback); }
                 Logger.logInfo("battleDTO="+JSON.stringify(battleDTO));
                 loadMap(callback, requestInput.userName, hero, battleDTO);
             });
@@ -48,7 +48,7 @@ exports.handler = function(event, context, callback) {
 
 function loadMap(callback, origin, userName, hero, battleDTO) {
     MapCache.getMap(hero.currentMapKey, (err, mapDTO) => {
-        if(err) { console.error(err); respondError(origin, 500, "Failed to load map:" + err, callback); }
+        if(err) { Logger.logError(err); respondError(origin, 500, "Failed to load map:" + err, callback); return; }
         var map = new MidgaardMainMap();
         map.build(mapDTO);
         var location = map.getLocation(hero.currentCoordinates);
@@ -57,7 +57,7 @@ function loadMap(callback, origin, userName, hero, battleDTO) {
         Logger.logInfo("Found the following records while checking for existing hero:");
         Logger.logInfo(JSON.stringify(hero));
         LoginDAO.setActiveHeroName(userName, hero.heroName, (err, updatedHero) => {
-            if(err) { console.error(err); respondError(origin, 500, "Failed to set active hero:" + err, callback); }
+            if(err) { Logger.logError(err); respondError(origin, 500, "Failed to set active hero:" + err, callback); return; }
             else respondOK(origin, data, callback);
         });                   
     });

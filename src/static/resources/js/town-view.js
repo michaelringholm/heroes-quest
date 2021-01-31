@@ -121,6 +121,7 @@ function TownView() {
     };
 
     this.drawTown = function(town) {
+        logDebug("drawTown()");
         $(".function").hide();
         $(".overlay").hide();
         $(canvasLayer1).show();

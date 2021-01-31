@@ -1,7 +1,7 @@
 import * as Core from '@aws-cdk/core';
 import EC2 = require('@aws-cdk/aws-ec2');
 import S3 = require('@aws-cdk/aws-s3');
-import IAM = require("@aws-cdk/aws-iam");
+import { IRole } from "@aws-cdk/aws-iam";
 import Lambda = require('@aws-cdk/aws-dynamodb');
 import { IVpc } from '@aws-cdk/aws-ec2';
 import { AttributeType, BillingMode, Table } from '@aws-cdk/aws-dynamodb';
@@ -9,8 +9,10 @@ import { MetaData } from './meta-data';
 import { Bucket } from '@aws-cdk/aws-s3';
 
 export class DataStack extends Core.Stack {
-    constructor(scope: Core.Construct, id: string, vpc: IVpc, props?: Core.StackProps) {
+    private apiRole:IRole;
+    constructor(scope: Core.Construct, id: string, vpc: IVpc, apiRole: IRole, props?: Core.StackProps) {
         super(scope, id, props);
+        this.apiRole = apiRole;
         this.createLoginTable();
         this.createHeroTable();
         this.createBattleBucket();
@@ -19,16 +21,18 @@ export class DataStack extends Core.Stack {
 
     private createMapBucket() {
         var name = MetaData.PREFIX+"map";
-        new Bucket(this, name, {
+        var bucket = new Bucket(this, name, {
             bucketName: name
         });
+        bucket.grantReadWrite(this.apiRole);
     }    
     
     private createBattleBucket() {
         var name = MetaData.PREFIX+"battle";
-        new Bucket(this, name, {
+        var bucket = new Bucket(this, name, {
             bucketName: name
         });
+        bucket.grantReadWrite(this.apiRole);
     }
 
     private createHeroTable() {

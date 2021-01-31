@@ -29,10 +29,12 @@ function LoginDAO() {
 			}
 		},
 		(err, loginItems) => {
-			if(err) { callback(err, null); return; }
+			if(err) { callback(err, null); return; }			
 			logger.logInfo("Got these data via statement:");
 			logger.logInfo(JSON.stringify(loginItems));
 			var loginDTO = AWS.DynamoDB.Converter.unmarshall(loginItems.Items[0]); // Seems only new fields are in Dynamo format
+			logger.logInfo("loginDTO:");
+			logger.logInfo(JSON.stringify(loginDTO));
 			callback(null, loginDTO);
 		})
 	};
@@ -64,8 +66,8 @@ function LoginDAO() {
 			logger.logInfo(JSON.stringify(updatedTableItem));
 			logger.logInfo("RETURNED FROM UNMARSHALL");
 			logger.logInfo(JSON.stringify(updatedHero));*/
-			hero.activeHero = updatedHero.activeHero;
-			callback(null, hero);
+			//hero.activeHero = updatedHero.activeHero;
+			callback(null, updatedHero);
 		})
 	}	
 

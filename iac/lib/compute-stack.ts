@@ -15,9 +15,9 @@ import { HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 
 export class ComputeStack extends Core.Stack {
-    private runtime:Lambda.Runtime = Lambda.Runtime.NODEJS_12_X;
-    private apiRole:IAM.IRole;
+    private runtime:Lambda.Runtime = Lambda.Runtime.NODEJS_12_X;    
     private ssmHelper = new SSMHelper();
+    public apiRole:IAM.IRole;
 
     constructor(scope: Core.Construct, id: string, vpc: IVpc, apiSecurityGroup: ISecurityGroup, props?: Core.StackProps) {
         super(scope, id, props);
@@ -78,36 +78,36 @@ export class ComputeStack extends Core.Stack {
     }
 
     /*private createUpdateStatusFunction(apiSecurityGroup: ISecurityGroup, vpc: IVpc):Lambda.Function {
-        return this.createLambdaFunction(apiSecurityGroup, "update-status-api-lam", "index.mainHandler", "assets/update-status-api/", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "update-status-api-lam", "index.handler", "assets/update-status-api/", vpc);
     }*/
 
     private createTrainHeroFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "train-hero-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "train-hero-fn", "index.handler", "../src/api/create-hero", vpc);
     }
     private createLeaveTownFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "leave-town-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "leave-town-fn", "index.handler", "../src/api/create-hero", vpc);
     }
     private createEnterTownFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "enter-town-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "enter-town-fn", "index.handler", "../src/api/create-hero", vpc);
     }
     private createMapMoveFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "map-move-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "map-move-fn", "index.handler", "../src/api/create-hero", vpc);
     }    
 
     private createSellItemFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "sell-item-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "sell-item-fn", "index.handler", "../src/api/create-hero", vpc);
     }
     private createBuyItemFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "buy-item-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "buy-item-fn", "index.handler", "../src/api/create-hero", vpc);
     }
     private createPlayRoundFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "play-round-fn", "index.mainHandler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "play-round-fn", "index.handler", "../src/api/create-hero", vpc);
     }    
     
-    private createStepFunctionsTrigger(apiSecurityGroup: ISecurityGroup, vpc: IVpc, queue:SQS.IQueue) {
-        var sfnLambdaTriggerFunction = this.createLambdaFunction(apiSecurityGroup, "invoke-sfn-api-lam", "index.mainHandler", "assets/invoke-sfn-api/", vpc);
+    /*private createStepFunctionsTrigger(apiSecurityGroup: ISecurityGroup, vpc: IVpc, queue:SQS.IQueue) {
+        var sfnLambdaTriggerFunction = this.createLambdaFunction(apiSecurityGroup, "invoke-sfn-api-lam", "index.handler", "assets/invoke-sfn-api/", vpc);
         sfnLambdaTriggerFunction.addEventSource(new LambdaEvents.SqsEventSource(queue, {}));
-    } 
+    }*/
     
     private buildAPIRole(): IAM.IRole {
         var role = new IAM.Role(this, MetaData.PREFIX+"api-role", {

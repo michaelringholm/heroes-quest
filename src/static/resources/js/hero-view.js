@@ -17,7 +17,7 @@ function HeroView() {
         var heroName = $(heroCard).attr("data-hero-name");
         
         if (heroName) {
-            data = { userGuid: gameSession.getUserGuid(), accessToken: gameSession.getAccessToken(), hero: { heroName: heroName } };
+            data = { userName: gameSession.getUserName(), userGuid: gameSession.getUserGuid(), accessToken: gameSession.getAccessToken(), hero: { heroName: heroName } };
             post(_this.CHOOSE_HERO_URL, data, this.chooseHeroSuccess, this.chooseHeroFailed);
         }	
     };

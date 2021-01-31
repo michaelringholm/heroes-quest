@@ -4,7 +4,7 @@ var FV = require('../common/field-verifier.js');
 var HeroDTO = require('./HeroDTO.js');
 var AWS = require("aws-sdk");
 
-function HeroDao() {
+function HeroDAO() {
 	var _this = this;
 	if(AWS.config.region == null) AWS.config.update({region: 'eu-north-1'});
 	
@@ -35,7 +35,8 @@ function HeroDao() {
 			  'userGuid': {S: userGuid},
 			  'heroName': {S: heroDTO.heroName},
 			  'heroClass': {S: heroDTO.heroClass},
-			  'isInBattle': {BOOL: false}
+			  'isInBattle': {BOOL: false},
+			  'jsonData': {S: JSON.stringify(heroDTO)}
 			},
 			ReturnConsumedCapacity: "TOTAL", 
 			//ProjectionExpression: 'ATTRIBUTE_NAME'
@@ -75,9 +76,11 @@ function HeroDao() {
 				Logger.logInfo(JSON.stringify(heroData));
 				var heroItem = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
 				Logger.logInfo("Hero [" + userGuid + "#" + heroName + "] loaded!");
-				Logger.logInfo("Hero JSON [" + JSON.stringify(heroItem) + "] loaded!");
-				hero = new HeroDTO(heroItem);
-				callback(null, hero);
+				if(!heroItem.jsonData) { callback("No json data found for hero."); return; }
+				heroDTO = new HeroDTO(JSON.parse(heroItem.jsonData));
+				Logger.logInfo("HeroDTO:");
+				Logger.logInfo(JSON.stringify(heroDTO));
+				callback(null, heroDTO);
 			}
 		);
 	};	
@@ -125,7 +128,7 @@ function HeroDao() {
 				var heroItem = AWS.DynamoDB.Converter.unmarshall(heroItemsDDB.Items[i]); 
 				heroItems.push(new HeroDTO(heroItem));
 			}
-			Logger.logInfo(JSON.stringify(heroItems));
+			Logger.logInfo("heroItems="+JSON.stringify(heroItems));
 			callback(null, heroItems);
 		})
 	}	
@@ -137,7 +140,7 @@ function HeroDao() {
   _this.construct();
 }
 
-module.exports = new HeroDao();
+module.exports = new HeroDAO();
 
 
 function getHeroes33(requestInput, callback) {

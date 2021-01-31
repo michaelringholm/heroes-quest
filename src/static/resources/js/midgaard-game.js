@@ -44,6 +44,14 @@ function GameSession() {
 	this.getAccessToken = function() {
 		return $("#accessToken").val();
 	}
+	
+	this.getUserName = function() {
+		return $("#userName").val();
+	}
+
+	this.setUserName = function(userName) {
+		$("#userName").val(userName);
+	}	
 }
 var gameSession = new GameSession();
 
@@ -84,7 +92,7 @@ function printJson(json) {
 }
 
 function logDebug(msg) {
-	$("#debugInfo").prepend("[INFO]: " + msg + "<br/>");
+	$("#debugInfo").prepend("[DEBUG]: " + msg + "<br/>");
 } 
 
 function logInfo(msg) {

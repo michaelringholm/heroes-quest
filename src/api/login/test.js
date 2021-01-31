@@ -9,13 +9,8 @@ console.log("Started...");
 data = { hero: { heroName: "Krom", heroClass: "WARRRIOR"} }
 
 var body = {
-    hero: {
-        heroName: "Krom"
-    },
-    userGuid: "364f73a3-e250-4cbb-90a4-7866ccd41d16",
     userName: "ethlore",
-    password: "test",
-    activeHeroName: "Krom",
+    password: "test"
 };
 
 var request = { 
@@ -25,7 +20,9 @@ var request = {
     body: JSON.stringify(body)
 };
 
-handler.handler(request, null, () => {
+handler.handler(request, null, (err,response) => {
+    if(err) console.error(err);
+    console.log(response);
     console.log("Done.");
 });
 //new COM().Logger.warn("This is a warning!");

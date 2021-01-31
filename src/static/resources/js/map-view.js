@@ -43,6 +43,7 @@ function MapView() {
     };    
 
     this.drawMap = function(response) {
+        logDebug("drawMap()");
         var data = response.data;
         $(".function").hide();
         $(".overlay").hide();

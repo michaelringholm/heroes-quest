@@ -6,9 +6,8 @@ var handler = require("./index.js");
 //var MAP = require("om-hq-map");
 
 
-console.log("Started...");
+Logger.logInfo("Started...");
 data = { hero: { heroName: "Krom", heroClass: "WARRRIOR"} }
-Logger.logWarn("aaaa");
 
 var body = {
     hero: {
@@ -26,7 +25,9 @@ var request = {
     body: JSON.stringify(body)
 };
 
-handler.handler(request, null, () => {
+handler.handler(request, null, (err,response) => {
+    if(err) console.error(err);
+    console.log(response);
     console.log("Done.");
 });
 //new COM().Logger.warn("This is a warning!");

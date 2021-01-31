@@ -22,6 +22,12 @@ export class NetworkStack extends Core.Stack {
                  { subnetType: EC2.SubnetType.ISOLATED }, { subnetType: EC2.SubnetType.PUBLIC }
             ]
         });
+        vpc.addGatewayEndpoint(MetaData.PREFIX+"s3-ep", {
+            service: EC2.GatewayVpcEndpointAwsService.S3,
+            subnets: [
+                 { subnetType: EC2.SubnetType.ISOLATED }, { subnetType: EC2.SubnetType.PUBLIC }
+            ]
+        });
     }
     
     private createVPC():EC2.IVpc {

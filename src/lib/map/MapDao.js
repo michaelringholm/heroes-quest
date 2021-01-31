@@ -7,14 +7,15 @@ var AWS = require("aws-sdk");
 function MapDAO() {
 	var _this = this;
 	var bucketName = appContext.PREFIX+"map";
-	var s3 = new AWS.S3();
+	var s3 = new AWS.S3({httpOptions:{connectTimeout:1000}});
+	
 		
 	this.exists = function(fileName, callback) {
 		_logger.logInfo("MapDao.exists");
 		s3.listObjectsV2(
 			{
 				Bucket: bucketName,
-				Prefix: fileName
+				Prefix: fileName,
 			}, 
 			(err, s3Objects) => 
 			{

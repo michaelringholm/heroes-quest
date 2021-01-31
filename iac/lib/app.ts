@@ -15,8 +15,8 @@ var props = {env: {account: process.env["CDK_DEFAULT_ACCOUNT"], region: process.
 var metaData = new MetaData();
 
 var networkStack = new NetworkStack(app, MetaData.PREFIX+"network-stack", props);
-new ComputeStack(app, MetaData.PREFIX+"compute-stack", networkStack.Vpc, networkStack.ApiSecurityGroup, props); //om-hq-user-login
-new DataStack(app, MetaData.PREFIX+"data-stack", networkStack.Vpc, props);
+var computeStack = new ComputeStack(app, MetaData.PREFIX+"compute-stack", networkStack.Vpc, networkStack.ApiSecurityGroup, props); //om-hq-user-login
+new DataStack(app, MetaData.PREFIX+"data-stack", networkStack.Vpc, computeStack.apiRole, props);
 //new PipelineStack(app, MetaData.PREFIX+"pipeline-stack");
 
 //new DatabaseStackL2(app, metaData.PREFIX+"database-stack", metaData, props);

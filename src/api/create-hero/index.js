@@ -24,23 +24,24 @@ exports.handler = function(event, context, callback) {
     var requestInput = JSON.parse(event.body);
     
     HeroDAO.getAll(requestInput.userGuid, (err, heroDTOs) => {
-        if(err) { Logger.logError(err); respondError(origin, 500, "Failed to create hero(1):" + err, callback); }
-        else {
+        if(err) { Logger.logError(err); respondError(origin, 500, "Failed to create hero(1):" + err, callback); return; }
             if(heroDTOs != null && heroDTOs.length > 2) { Logger.logError("You already have three heroes, delete one first."); respondError(origin, 500, "You already have three heroes, delete one first.", callback); return; }
-            HeroDAO.get(requestInput.userGuid, requestInput.hero.heroName, (err, heroData) => {
-                if(err) { Logger.logError(err); respondError(origin, 500, "Failed to create hero(1):" + err, callback); }
-                else {
-                    Logger.logInfo("heroData=" + JSON.stringify(heroData));
-                    if(heroData != null && heroData.Count > 0) { Logger.logError("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }                    
-                    else {
-                        HeroDAO.createHero(requestInput.userGuid, new HeroDTO(requestInput.hero), (err,newHeroData) => {
-                            if(err) { Logger.logError(err); respondError(origin, 500, "Failed to create hero(2):" + err, callback); }
-                            else respondOK(origin, newHeroData, callback);
-                        });
-                    }
-                }
-            });
+            //HeroDAO.get(requestInput.userGuid, requestInput.hero.heroName, (err, heroData) => {
+                //if(err) { Logger.logError(err); respondError(origin, 500, "Failed to create hero(1):" + err, callback); }
+                //else {
+                    //Logger.logInfo("heroData=" + JSON.stringify(heroData));
+        if(heroDTOs.length>0) {
+            Logger.logInfo("Checking for existing hero name");
+            for(var i=0;i<heroDTOs.length;i++) {
+                if(requestInput.hero.heroName == heroDTOs[i].heroName) { Logger.logError("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }
+            }
         }
+        HeroDAO.createHero(requestInput.userGuid, new HeroDTO(requestInput.hero), (err,newHeroData) => {
+            if(err) { Logger.logError(err); respondError(origin, 500, "Failed to create hero(2):" + err, callback); }
+            else respondOK(origin, newHeroData, callback);
+        });
+                //}
+            //});
     });
 };
 

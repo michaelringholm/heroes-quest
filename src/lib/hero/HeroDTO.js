@@ -2,7 +2,7 @@ var _logger = require('../common/Logger.js');
 var Battle = require('../battle/Battle.js');
 var Coordinate = require('../map/Coordinate.js');
 var _mapDao = require('../map/MapDAO.js');
-var _battleDao = require('../battle/BattleDao.js');
+var _battleDao = require('../battle/BattleDAO.js');
 var _itemFactory = require('../item/ItemFactory.js');
 
 module.exports = function Hero(anonObj) {
@@ -31,8 +31,8 @@ module.exports = function Hero(anonObj) {
 	this.items = [];
 	this.equippedItems = {};
 	this.atkTypes = [];
-	this.currentMapKey = "";
-	this.currentCoordinates = {};
+	this.currentMapKey = "midgaard-main";
+	this.currentCoordinates = {x:0, y:0};
 	this.rested = false;
 			
 	this.construct = function() {

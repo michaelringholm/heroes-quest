@@ -40,6 +40,7 @@ function LoginView() {
     this.login = function() {
         welcomeMusic = soundPlayer.playSound("./resources/sounds/bard-intro.wav");
         var clientLogin = {userName:$("#login").val(), password:$("#password").val()};
+        gameSession.setUserName($("#login").val());
         //callMethod("http://" + hostIp + ":" + hostPort, "login", clientLogin, loginSuccess, loginFailed);
         post(LOGIN_URL, clientLogin, loginSuccess, loginFailed);
     };
@@ -51,10 +52,10 @@ function LoginView() {
     var addHeroCard = function(hero) {
         var newHeroCard = $(".hero-card.template").clone();
         newHeroCard.removeClass("template");
-        $(newHeroCard).find(".hero-name").html(hero.heroName.S);
-        $(newHeroCard).find(".hero-text").html(hero.heroClass.S);
-        $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero.heroClass.S));
-        $(newHeroCard).find(".card").attr("data-hero-name", hero.heroName.S);
+        $(newHeroCard).find(".hero-name").html(hero.heroName);
+        $(newHeroCard).find(".hero-text").html(hero.heroClass);
+        $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero.heroClass));
+        $(newHeroCard).find(".card").attr("data-hero-name", hero.heroName);
         return newHeroCard;
     };
 
