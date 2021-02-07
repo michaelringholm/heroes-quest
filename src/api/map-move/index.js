@@ -75,7 +75,7 @@ exports.handler = function(event, context, callback) {
                                     });
                                 }
                                 else {
-                                    updateMapLocation(requestInput, heroDTO, (err, updatedHero) => {
+                                    HeroDAO.save(requestInput.userGuid, heroDTO, (err, updatedHero) => {
                                         if(err) { Logger.logError(err); respondError(origin, 500, "Failed to update location:" + err, callback); return; }
                                         respondOK(origin, moveResult, callback);
                                         return;
@@ -91,61 +91,6 @@ exports.handler = function(event, context, callback) {
         });
     });
 };
-
-function updateBattle(requestInput, heroDTO, callback) {
-    Logger.logInfo("updateBattle...");
-    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
-    var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
-    var docClient = new AWS.DynamoDB.DocumentClient();
-    
-    var params = {
-        TableName:HERO_TABLE_NAME,
-        Key:{
-            "userGuid": requestInput.userGuid,
-            "heroName": heroDTO.heroName
-        },
-        UpdateExpression: "set activeHero = :activeHero",
-        ExpressionAttributeValues:{
-            ":activeHero":heroDTO.heroName
-        },
-        ReturnValues:"ALL_NEW"
-    };
-
-    docClient.update(params, (err, updatedTableItem) => {
-        if(err) { callback(err, null); return; }
-        var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
-        heroDTO.activeHero = updatedHero.activeHero;
-        callback(null, heroDTO);
-    })
-}
-
-function updateMapLocation(requestInput, heroDTO, callback) {
-    Logger.logInfo("updateMapLocation...");
-    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userGuid"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
-    var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
-    var docClient = new AWS.DynamoDB.DocumentClient();
-    
-    var params = {
-        TableName:HERO_TABLE_NAME,
-        Key:{
-            "userGuid": requestInput.userGuid,
-            "heroName": heroDTO.heroName
-        },
-        UpdateExpression: "set activeHero = :activeHero",
-        ExpressionAttributeValues:{
-            ":activeHero":heroDTO.heroName
-        },
-        ReturnValues:"ALL_NEW"
-    };
-
-    docClient.update(params, (err, updatedTableItem) => {
-        if(err) { callback(err, null); return; }
-        var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
-        heroDTO.activeHero = updatedHero.activeHero;
-        Logger.logInfo("updateMapLocation OK!");
-        callback(null, heroDTO);
-    })
-}
 
 function getActiveHeroName(requestInput, callback) {
     Logger.logInfo("getActiveHeroName...");

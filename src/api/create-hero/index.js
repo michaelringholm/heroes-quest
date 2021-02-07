@@ -36,7 +36,7 @@ exports.handler = function(event, context, callback) {
                 if(requestInput.hero.heroName == heroDTOs[i].heroName) { Logger.logError("Hero name already exists"); respondError(origin, 500, "Hero name already exists", callback); return; }
             }
         }
-        HeroDAO.createHero(requestInput.userGuid, new HeroDTO(requestInput.hero), (err,newHeroData) => {
+        HeroDAO.save(requestInput.userGuid, new HeroDTO(requestInput.hero), (err,newHeroData) => {
             if(err) { Logger.logError(err); respondError(origin, 500, "Failed to create hero(2):" + err, callback); }
             else respondOK(origin, newHeroData, callback);
         });

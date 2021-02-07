@@ -7,6 +7,7 @@ import { IVpc } from '@aws-cdk/aws-ec2';
 import { AttributeType, BillingMode, Table } from '@aws-cdk/aws-dynamodb';
 import { MetaData } from './meta-data';
 import { Bucket } from '@aws-cdk/aws-s3';
+import { Tags } from '@aws-cdk/core';
 
 export class DataStack extends Core.Stack {
     private apiRole:IRole;
@@ -16,6 +17,7 @@ export class DataStack extends Core.Stack {
         this.createLoginTable();
         this.createHeroTable();
         this.createBattleBucket();
+        this.createHeroBucket();
         this.createMapBucket();
     }
 
@@ -25,6 +27,7 @@ export class DataStack extends Core.Stack {
             bucketName: name
         });
         bucket.grantReadWrite(this.apiRole);
+        Core.Tags.of(bucket).add(MetaData.NAME, name);
     }    
     
     private createBattleBucket() {
@@ -33,7 +36,17 @@ export class DataStack extends Core.Stack {
             bucketName: name
         });
         bucket.grantReadWrite(this.apiRole);
+        Core.Tags.of(bucket).add(MetaData.NAME, name);
     }
+
+    private createHeroBucket() {
+        var name = MetaData.PREFIX+"hero-s3";
+        var bucket = new Bucket(this, name, {
+            bucketName: name
+        });
+        bucket.grantReadWrite(this.apiRole);
+        Core.Tags.of(bucket).add(MetaData.NAME, name);
+    }    
 
     private createHeroTable() {
         var name = MetaData.PREFIX+"hero";

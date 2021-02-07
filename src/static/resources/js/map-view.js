@@ -11,11 +11,9 @@ function MapView() {
     this.MAP_MOVE_URL = "https://55330k0b71.execute-api.eu-north-1.amazonaws.com/map-move-fn";
 
     var move = function(direction) {
-        if(!direction)
-            gameSession.direction = $("#direction").val();
-        else
-            gameSession.direction = direction;
-        
+        if(!direction) gameSession.direction = $("#direction").val();
+        else gameSession.direction = direction;
+        gameSession.userGuid = gameSession.getUserGuid(); gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
         post(_this.MAP_MOVE_URL, gameSession, moveSuccess, moveFailed);
     };
     

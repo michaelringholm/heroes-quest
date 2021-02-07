@@ -6,26 +6,32 @@ var AWS = require("aws-sdk");
 
 function HeroDAO() {
 	var _this = this;
+	var bucketName = appContext.PREFIX+"hero-s3";
+	this.s3 = new AWS.S3();
 	if(AWS.config.region == null) AWS.config.update({region: 'eu-north-1'});
 	
-	this.exists = function(heroId) {
-		Logger.logInfo("HeroDao.exists");
-		var fs = require("fs");
-		var fileName = "./data/heroes/" + heroId + '.hero.json';
-			
-		var fileFound = true;
-		try {
-			fs.statSync(fileName);
-			Logger.logInfo("File [" + fileName + "] exists!");
-		}
-		catch(e) {
-			fileFound = false;
-			Logger.logWarn("File [" + fileName + "] does not exist!");
-		}
-		return fileFound;
+	this.exists = function(fileName, callback) {
+		Logger.logInfo("HeroDAO.exists");
+		_this.s3.listObjectsV2(
+			{
+				Bucket: bucketName,
+				Prefix: fileName
+			}, 
+			(err, s3Objects) => 
+			{
+				if (err) { Logger.logError("exists:"+err, err.stack); callback(err, false); return; }				
+				Logger.logInfo("Objects in bucket are [" + JSON.stringify(s3Objects) + "]");
+				if(s3Objects.KeyCount<1) { callback(null, false); return; }
+				for(var i=0; i<s3Objects.Contents.length;i++) {					
+					if(s3Objects.Contents[i].Key == fileName) { callback(null, true); return; }
+				}
+				callback(null, s3Objects.KeyCount==1);
+				return;
+			}
+		);
 	};
 
-	this.createHero = function(userGuid, heroDTO, callback) {
+	this.save = function(userGuid, heroDTO, callback) {
 		if(!userGuid) { Logger.logError("Missing field [userGuid]."); callback("Missing field [userGuid].", null); return; }
 		var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName","heroClass"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
 		var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
@@ -35,8 +41,7 @@ function HeroDAO() {
 			  'userGuid': {S: userGuid},
 			  'heroName': {S: heroDTO.heroName},
 			  'heroClass': {S: heroDTO.heroClass},
-			  'isInBattle': {BOOL: false},
-			  'jsonData': {S: JSON.stringify(heroDTO)}
+			  'isInBattle': {BOOL: false}
 			},
 			ReturnConsumedCapacity: "TOTAL", 
 			//ProjectionExpression: 'ATTRIBUTE_NAME'
@@ -44,11 +49,15 @@ function HeroDAO() {
 		ddb.putItem(params, function(err, newHeroData) {
 			if (err) { Logger.logInfo(err); callback(err, null); }
 			else {       
-				Logger.logInfo("Hero created");
-				Logger.logInfo("newHeroData JSON [" + JSON.stringify(newHeroData) + "] created!");
-				var newHeroItem = AWS.DynamoDB.Converter.unmarshall(newHeroData); // Seems only new fields are in Dynamo format
-				var heroDTO = new HeroDTO(newHeroItem);
-				callback(null, heroDTO);
+				var heroKey = userGuid+"#"+heroDTO.heroName;
+				_this.saveDetails(heroKey, heroDTO, (err, data) => {
+					if (err) { Logger.logInfo(err); callback(err, null); return; }
+					Logger.logInfo("Hero created");
+					Logger.logInfo("newHeroData JSON [" + JSON.stringify(newHeroData) + "] created!");
+					var newHeroItem = AWS.DynamoDB.Converter.unmarshall(newHeroData); // Seems only new fields are in Dynamo format
+					var heroDTO = new HeroDTO(newHeroItem);
+					callback(null, heroDTO);
+				});
 			}
 		});    
 	}	
@@ -76,33 +85,94 @@ function HeroDAO() {
 				Logger.logInfo(JSON.stringify(heroData));
 				var heroItem = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
 				Logger.logInfo("Hero [" + userGuid + "#" + heroName + "] loaded!");
-				if(!heroItem.jsonData) { callback("No json data found for hero."); return; }
-				heroDTO = new HeroDTO(JSON.parse(heroItem.jsonData));
-				Logger.logInfo("HeroDTO:");
-				Logger.logInfo(JSON.stringify(heroDTO));
-				callback(null, heroDTO);
+				var heroKey = userGuid+"#"+heroName;
+				_this.loadDetails(heroKey, (err, heroDTO) => {
+					if (err) { Logger.logInfo(err); callback(err, null); return; }
+					//if(!jsonData) { callback("No json data found for hero."); return; }
+					//heroDTO = new HeroDTO(JSON.parse(jsonData));
+					Logger.logInfo("HeroDTO:");
+					Logger.logInfo(JSON.stringify(heroDTO));
+					callback(null, heroDTO);
+				});
 			}
 		);
 	};	
 	
-	this.save = function(hero) {
-		Logger.logInfo("HeroDao.save");
+	this.loadDetails = function(heroKey, callback) {
+		Logger.logInfo("HeroDAO.load");
+		var fileName = "hero-" + heroKey + ".json";
+		this.exists(fileName, (err, exists)=> {
+			if (err) { callback(err, false); return; }
+			if (!exists) { callback("Hero details file [" + fileName + "] does not exist!", null); return; }
+			var params = {
+				Bucket: bucketName, 
+				Key: fileName
+			};
 
-		if(hero && hero.heroId) {
-			var fs = require("fs");
-			var fileName = "./data/heroes/" + hero.heroId + '.hero.json';
-			
-			var updateTime = new Date();
-			fs.writeFile(fileName, JSON.stringify(hero),  function(err) {
-				if (err) {
-					return console.error(err);
-				}
-				Logger.logInfo("Data written successfully!");
+			_this.s3.getObject(params, function(err, s3Object) {
+				if (err) { Logger.logError(err, err.stack); callback(err, null); return; }								
+				Logger.logInfo("HeroJson=" + JSON.stringify(s3Object.Body.toString()));
+				var heroDTO = JSON.parse(s3Object.Body.toString());
+				callback(null, heroDTO);
+			});		
+		});
+	};	
+	
+	this.saveDetails = function(heroKey, heroDTO, callback) {
+		Logger.logInfo("HeroDAO.save");
+		if(!callback) { Logger.logWarn("HeroDAO.save called with undefined callback!"); return; }
+		if(heroDTO) {
+			var fileName = "hero-" + heroKey + ".json";
+			this.exists(fileName, (err, exists)=> {
+				if (err) { Logger.logError("load:"+err, err.stack); callback(err, false); return; }
+				//if (!exists) { callback("Hero details file [" + fileName + "] does not exist!", null); return; }
+				var params = {
+					Body: JSON.stringify(heroDTO),
+					Bucket: bucketName, 
+					Key: fileName
+				};
+				Logger.logInfo("HeroDAO.saveDetails(1)");			
+				_this.s3.putObject(params, function(err, data) {
+					if (err) { Logger.logError("save:"+err, err.stack); callback(err, null); return; }
+					Logger.logInfo("HeroDAO.saveDetails(2)");
+					Logger.logInfo(data);
+					callback(null, true);
+				});
+				var updateTime = new Date();
 			});
 		}
 		else
-			Logger.error("Skipping save of hero as the hero in invalid!");
+			Logger.error("Skipping save of battles as the battles hashmap in invalid!");
 	};
+
+	this.updateBattleStatus = function(userGuid, heroName, isInBattle, callback) {
+		Logger.logInfo("HeroDAO.updateBattleStatus()");
+		if(!userGuid) { Logger.logError("Missing field [userGuid]."); callback("Missing field [userGuid].", null); return; }
+		if(!heroName) { Logger.logError("Missing field [heroName]."); callback("Missing field [heroName].", null); return; }
+		if(!isInBattle) { Logger.logError("Missing field [isInBattle]."); callback("Missing field [isInBattle].", null); return; }
+		var docClient = new AWS.DynamoDB.DocumentClient();
+		
+		var params = {
+			TableName:appContext.HERO_TABLE_NAME,
+			Key:{
+				"userGuid": userGuid,
+				"heroName": heroName
+			},
+			UpdateExpression: "set isInBattle = :isInBattle",
+			ExpressionAttributeValues:{
+				":isInBattle":isInBattle
+			},
+			ReturnValues:"ALL_NEW"
+		};
+	
+		docClient.update(params, (err, updatedTableItem) => {
+			if(err) { callback(err, null); return; }
+			//var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
+			//heroDTO.activeHero = updatedHero.activeHero;
+			//callback(null, heroDTO);
+			callback(null, {});
+		})
+	}	
 
 	this.getAll = function(userGuid, callback) {
 		Logger.logInfo("HeroDao.getAll()");

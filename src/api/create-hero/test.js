@@ -10,7 +10,7 @@ console.log("Started...");
 
 var body = {
     hero: {
-        heroName: "Krom"
+        heroName: "Goldmoon"
     },
     userGuid: "364f73a3-e250-4cbb-90a4-7866ccd41d16",
     userName: "ethlore",
