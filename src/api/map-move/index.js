@@ -5,6 +5,7 @@ var { MidgaardMainMap } = require("om-hq-lib");
 var { MobFactory } = require("om-hq-lib");
 var { MapCache } = require("om-hq-lib");
 var { BattleCache } = require("om-hq-lib");
+var { BattleDAO } = require("om-hq-lib");
 var { Hero } = require("om-hq-lib");
 var { HeroDAO } = require("om-hq-lib");
 var { LoginDAO } = require("om-hq-lib");
@@ -36,7 +37,7 @@ exports.handler = function(event, context, callback) {
         //requestInput.activeHeroName = requestInput;
         HeroDAO.get(loginDTO.userGuid, loginDTO.activeHeroName, (err, heroDTO) => {
             if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
-            heroDTO.heroKey = heroDTO.userGuid+"#"+heroDTO.heroName;
+            heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
             if(heroDTO != null && heroDTO.currentMapKey == null) heroDTO.currentMapKey = "midgaard-main";
             if(heroDTO != null && heroDTO.currentCoordinates == null) heroDTO.currentCoordinates = {x:0,y:0};
 
@@ -52,10 +53,11 @@ exports.handler = function(event, context, callback) {
                 //var data = { heroDTO: heroDTO, battle: currentBattle, map: currentMap, status: 'Your active heroDTO is now [' + heroDTO.heroKey + ']!' };
                 var direction = requestInput.direction;
                 if (direction == "west" || direction == "east" || direction == "north" || direction == "south") {
-                    if (heroDTO.inBattle) {
-                        getBattle(heroDTO.heroKey, (err, battleDTO) => {
+                    if (heroDTO.isInBattle) {
+                        Logger.logInfo("Hero is in a battle, not moving!");
+                        BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
                             if(err) { Logger.logError(err, err.stack); respondError(origin, 500, "failed to get battle:" + err, callback); return; }
-                            respondOK(origin, battleDTO, callback);
+                            respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
                             return;
                         });
                     }
@@ -68,7 +70,7 @@ exports.handler = function(event, context, callback) {
                                 //_heroDao.save(serverLogin.activeHero);
                                 //var battle = _battleCache[serverLogin.activeHero.heroId];
                                 if (moveResult.battle) {
-                                    updateBattle(requestInput, heroDTO, (err, updatedHero) => {
+                                    HeroDAO.updateBattleStatus(requestInput.userGuid, heroDTO.heroName, true, (err, updatedHero) => {
                                         if(err) { Logger.logError(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
                                         respondOK(origin, moveResult, callback);
                                         return;

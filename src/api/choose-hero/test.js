@@ -6,15 +6,11 @@ var handler = require("./index.js");
 
 
 console.log("Started...");
-data = { hero: { heroName: "Krom", heroClass: "WARRRIOR"} }
+//data = { hero: { heroName: "Krom", heroClass: "WARRRIOR"} }
 
 var body = {
-    hero: {
-        heroName: "Krom"
-    },
-    userGuid: "364f73a3-e250-4cbb-90a4-7866ccd41d16",
-    userName: "ethlore",
-    activeHeroName: "Krom",
+    accessToken: "8ad11007-fe07-4e7d-8f10-38f0d1cc6b6d"
+    //activeHeroName: "Krom",
 };
 
 var request = { 

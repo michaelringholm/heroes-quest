@@ -17,21 +17,21 @@ function MapView() {
         post(_this.MAP_MOVE_URL, gameSession, moveSuccess, moveFailed);
     };
     
-    var moveSuccess = function(data) {
-        logInfo("move hero OK!");
-        logInfo(JSON.stringify(data));
+    var moveSuccess = function(response) {
+        logDebug("move hero OK!");
+        printJson(JSON.stringify(response));
         
-        if(data) {
-            if(data.terrainType) { // The move resulted in an actual move
-                var location = data;
-                var targetCoordinates = location.targetCoordinates;			
+        if(response) {
+            if(response.data && response.data.newLocation && response.data.newLocation.terrainType) { // The move resulted in an actual move
+                var location = response.data.newLocation;
+                var targetCoordinates = location.targetCoordinates;
                 drawHeroMapIcon(canvasLayer2, targetCoordinates.x, targetCoordinates.y);
-                logInfo("you moved to a new location");
+                logDebug("you moved to a new location");
             }
-            else if(data.hero && data.mob) { // The move resulted in a fight
-                var battle = data;                
+            else if(response.data.hero && response.data.battle) { // The move resulted in a fight
+                var battle = response.data.battle;                
                 battleView.startOrResumeBattle(battle);
-                logInfo("you were surprised by monsters!");
+                logDebug("you were surprised by monsters!");
             }
         }
     };
@@ -101,7 +101,7 @@ function MapView() {
     };
         
     var drawHeroMapIcon = function(canvas, xPos, yPos) {
-        logInfo("drawHeroMapIcon called!");
+        logDebug("drawHeroMapIcon called!");
         var ctx = canvas.getContext("2d");
         ctx.clearRect(0,0,canvasWidth,canvasHeight);
         var img = document.getElementById("heroMapIcon");
@@ -133,6 +133,6 @@ function MapView() {
             move(direction);		
         }
         else
-            logInfo("Invalid move direction!");
+            logDebug("Invalid move direction!");
     };     
 }

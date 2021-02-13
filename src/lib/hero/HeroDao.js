@@ -90,6 +90,7 @@ function HeroDAO() {
 					if (err) { Logger.logInfo(err); callback(err, null); return; }
 					//if(!jsonData) { callback("No json data found for hero."); return; }
 					//heroDTO = new HeroDTO(JSON.parse(jsonData));
+					heroDTO.isInBattle = heroItem.isInBattle; // IMPORTANT
 					Logger.logInfo("HeroDTO:");
 					Logger.logInfo(JSON.stringify(heroDTO));
 					callback(null, heroDTO);

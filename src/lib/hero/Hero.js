@@ -49,7 +49,11 @@ module.exports = function Hero(heroDTO) {
 		}
 		else
 			return { status: false, reason:"Item was not equipped, nothing to remove!" };
-	};	
+	};
+
+	this.getHeroKey = function(userGuid, heroName) {
+		return userGuid+"#"+heroName;
+	};
 	
 	// east, west, north, south, up, down
 	this.move = function(requestInput, heroDTO, direction, map, callback)  {
@@ -74,7 +78,8 @@ module.exports = function Hero(heroDTO) {
 				//battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
 				logger.logInfo("Mob found at location, entering battle!");
 				var battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);
-				_battleDao.save(requestInput.userGuid, battleDTO, (err, saved)=> {
+				var heroKey = _this.getHeroKey(requestInput.userGuid, heroDTO.heroName);
+				_battleDao.save(heroKey, battleDTO, (err, saved)=> {
 					if (err) { logger.logError("move(1):"+err, err.stack); callback(err, null); return; }
 					heroDTO.isInBattle = true;
 					_heroDao.updateBattleStatus(requestInput.userGuid, heroDTO.heroName, true, (err, saved)=> {

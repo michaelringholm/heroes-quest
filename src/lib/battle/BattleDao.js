@@ -44,7 +44,7 @@ function BattleDao() {
 			var s3 = new AWS.S3();
 			s3.getObject(params, function(err, s3Object) {
 				if (err) { Logger.logError(err, err.stack); callback(err, null); return; }
-				Logger.logInfo(JSON.stringify(s3Object));
+				Logger.logInfo("BattleJSON=" + s3Object.Body);
 				var battleDTO = JSON.parse(s3Object.Body);
 				callback(null, battleDTO);
 			});		
