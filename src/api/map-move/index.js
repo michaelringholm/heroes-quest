@@ -31,8 +31,9 @@ exports.handler = function(event, context, callback) {
 
     //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     var requestInput = JSON.parse(event.body);
+    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); respondError(origin, 500, "Access token missing!", callback); return; }
     
-    LoginDAO.get(requestInput.userName, (err, loginDTO) => {
+    LoginDAO.getByToken(requestInput.accessToken, (err, loginDTO) => {
         if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
         //requestInput.activeHeroName = requestInput;
         HeroDAO.get(loginDTO.userGuid, loginDTO.activeHeroName, (err, heroDTO) => {
@@ -93,53 +94,6 @@ exports.handler = function(event, context, callback) {
         });
     });
 };
-
-function getActiveHeroName(requestInput, callback) {
-    Logger.logInfo("getActiveHeroName...");
-    var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
-    //AWS.config.update({region: 'eu-central-1'});
-    var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    Logger.logInfo("Calling getActiveHeroName via statement...");
-    
-    ddb.query({
-        TableName: LOGIN_TABLE_NAME,
-        KeyConditionExpression: "userName = :userName",
-        ExpressionAttributeValues: {
-            ":userName": {S: requestInput.userName}
-        }
-    },
-    (err, loginItems) => {
-        if(err) { callback(err, null); return; }
-        Logger.logInfo("Got these data via statement:");
-        Logger.logInfo(JSON.stringify(loginItems));
-        var loginDTO = AWS.DynamoDB.Converter.unmarshall(loginItems.Items[0]); // Seems only new fields are in Dynamo format
-        callback(null, loginDTO);
-    })
-}
-
-/*
-function getHero(loginDTO, callback) {
-    var missingFields = new FV.FieldVerifier().Verify(loginDTO, ["userGuid","activeHeroName"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return }
-    //AWS.config.update({region: 'eu-central-1'});
-    var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    Logger.logInfo("Calling getHero via statement...");
-    
-    ddb.query({
-        TableName: HERO_TABLE_NAME,
-        KeyConditionExpression: "userGuid = :userGuid and heroName = :heroName", // "userGuid = :userGuid and heroName = :heroName",
-        ExpressionAttributeValues: {
-            ":userGuid": {S: loginDTO.userGuid},
-            ":heroName": {S: loginDTO.activeHeroName},            
-        }
-    },
-    (err, heroData) => {
-        if(err) { callback(err, null); return; }
-        Logger.logInfo("Got these data via statement:");
-        Logger.logInfo(JSON.stringify(heroData));
-        var heroDTO = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
-        callback(null, heroDTO);
-    })
-}*/
 
 function tweakOrigin(origin) {
     var tweakedOrigin = "-";

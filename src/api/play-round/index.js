@@ -8,10 +8,8 @@ const deckSize = 12;
 const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
-    //dynamo.deleteItem(JSON.parse(event.body), done);
-    //dynamo.scan({ TableName: event.queryStringParameters.TableName }, done);
-    //dynamo.putItem(JSON.parse(event.body), done);
-    //dynamo.updateItem(JSON.parse(event.body), done); 
+    Logger.logInfo(JSON.stringify(event));
+    if(AWS.config.region == null) AWS.config.update({region: 'eu-north-1'});
     var method = event.requestContext.http.method;
     var origin = event.headers.origin;
     var referer = event.headers.referer;
@@ -19,12 +17,15 @@ exports.handler = function(event, context, callback) {
         preFlightResponse(origin, referer, callback);
         return;
     }
-    console.log("method="+method);
-      
-    var userInfo = JSON.parse(event.body);
-    var missingFields = new HQLIB.FieldVerifier.FieldVerifier().Verify(userInfo, ["userName", "accessToken"]);
-    if(missingFields.length>0) respondError(401, reason, callback);
-    respondOK(origin, null, callback);   
+    Logger.logInfo("method="+method);
+    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+    var requestInput = JSON.parse(event.body);
+    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); respondError(origin, 500, "Access token missing!", callback); return; }
+    
+    LoginDAO.getByToken(requestInput.accessToken, (err, loginDTO) => {
+        if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
+        
+    });
 };
 
 function insertHighScore(userInfo, round, callback) {

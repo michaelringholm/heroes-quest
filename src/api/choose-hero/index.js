@@ -27,7 +27,8 @@ exports.handler = function(event, context, callback) {
     Logger.logInfo("method="+method);
 
     //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-    var requestInput = JSON.parse(event.body);    
+    var requestInput = JSON.parse(event.body);
+    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); respondError(origin, 500, "Access token missing!", callback); return; }
     
     LoginDAO.getByToken(requestInput.accessToken, (err, loginDTO) => {
         if(err) { Logger.logError(err); respondError(origin, 500, "Failed: choose hero(1):" + err, callback); return; }

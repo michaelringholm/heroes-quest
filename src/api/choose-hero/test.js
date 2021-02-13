@@ -6,11 +6,9 @@ var handler = require("./index.js");
 
 
 console.log("Started...");
-//data = { hero: { heroName: "Krom", heroClass: "WARRRIOR"} }
 
 var body = {
-    accessToken: "8ad11007-fe07-4e7d-8f10-38f0d1cc6b6d"
-    //activeHeroName: "Krom",
+    accessToken: process.env["accessToken"]
 };
 
 var request = { 

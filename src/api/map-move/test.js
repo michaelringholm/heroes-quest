@@ -7,14 +7,11 @@ var handler = require("./index.js");
 
 
 Logger.logInfo("Started...");
-data = { hero: { heroName: "Krom", heroClass: "WARRRIOR"} }
+// export accessToken=""
+Logger.logInfo(process.env.accessToken);
 
 var body = {
-    hero: {
-        heroName: "Krom"
-    },
-    userGuid: "364f73a3-e250-4cbb-90a4-7866ccd41d16",
-    userName: "ethlore",
+    accessToken: process.env.accessToken,
     direction: "east"
 };
 
