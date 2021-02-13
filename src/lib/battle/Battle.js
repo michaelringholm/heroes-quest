@@ -65,7 +65,7 @@ module.exports =
 			if (playerX.luck > playerY.luck)
 				return playerY;
 
-			return pX;
+			return playerX;
 		};
 
 		this.battleEnded = function (winner, loser) {			

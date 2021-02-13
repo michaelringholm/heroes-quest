@@ -2,6 +2,10 @@ const AWS = require("aws-sdk");
 const UUID = require('uuid');
 var HQLIB = require("om-hq-lib");
 var { HeroDAO } = require("om-hq-lib");
+var { Logger } = require("om-hq-lib");
+var { LoginDAO } = require("om-hq-lib");
+var { Battle } = require("om-hq-lib");
+var { BattleDAO } = require("om-hq-lib");
 
 const maxTurns = 50;
 const deckSize = 12;
@@ -24,7 +28,16 @@ exports.handler = function(event, context, callback) {
     
     LoginDAO.getByToken(requestInput.accessToken, (err, loginDTO) => {
         if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
-        
+        HeroDAO.get(loginDTO.userGuid, loginDTO.activeHeroName, (err, heroDTO) => {
+            if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
+            heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
+            BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
+                if(err) { Logger.logError(err, err.stack); respondError(origin, 500, "failed to get battle:" + err, callback); return; }
+                new Battle(battleDTO).nextRound();
+                respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
+                return;
+            });
+        });
     });
 };
 
