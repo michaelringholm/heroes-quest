@@ -1,4 +1,5 @@
 var _logger = require('../common/Logger.js');
+var BattleActions = require('./BattleActions.js');
 var Hero = require('../hero/Hero.js');
 
 module.exports =
@@ -68,7 +69,7 @@ module.exports =
 			return playerX;
 		};
 
-		this.battleEnded = function (winner, loser) {			
+		this.battleEnded = function (winner, loser, callback) {			
 			_this.battleDTO.status.over = true;
 
 			if (winner.heroId == _this.battleDTO.hero.heroId) {
@@ -81,7 +82,10 @@ module.exports =
 				_this.battleDTO.status.winner = winner.name;
 				_this.battleDTO.status.loser = loser.heroName;
 				_logger.logInfo(winner.name + " won! and " + loser.heroName + " lost!");
-				_this.heroLost();
+				_this.heroLost((err, heroDTO) => {
+					if(err) { Logger.logError(err); callback(err, null); return; }
+					callback(null, heroDTO);
+				});
 			}			
 		};
 
@@ -96,9 +100,12 @@ module.exports =
 				_this.battleDTO.hero.items.push(_this.battleDTO.mob.items[itemIndex]);
 		};
 
-		this.heroLost = function () {
+		this.heroLost = function (callback) {
 			_logger.logInfo("hero lost the battle!");
-			new Hero(_this.battleDTO.hero).died(_this.battleDTO.mob);
+			new Hero(_this.battleDTO.hero).died(_this.battleDTO.mob, (err, heroDTO) => {
+				if(err) { Logger.logError(err); callback(err, null); return; }
+				callback(null, heroDTO);
+			});
 		};
 
 		this.regen = function () {
@@ -111,8 +118,9 @@ module.exports =
 				_this.battleDTO.mob.hp = _this.battleDTO.mob.baseHp;
 		};
 
-		this.nextRound = function () {
+		this.nextRound = function (heroBattleAction, callback) {
 			_logger.logInfo("Battle.nextRound");
+			_this.battleDTO.hero.currentBattleAction = heroBattleAction;
 
 			if (_this.battleDTO.status.over) {
 				_logger.logInfo("battle is over!");
@@ -127,23 +135,31 @@ module.exports =
 			_this.attack(firstUp, secondUp);
 
 			if (secondUp.hp <= 0) {
-				_this.battleEnded(firstUp, secondUp);
+				_this.battleEnded(firstUp, secondUp, (err, heroDTO) => {
+					if(err) { Logger.logError(err); callback(err, null); return; }
+					callback(null, heroDTO);
+				});
 			}
 			else {
 				_this.attack(secondUp, firstUp);
 
 				if (firstUp.hp <= 0) {
-					_this.battleEnded(secondUp, firstUp);
+					_this.battleEnded(secondUp, firstUp, (err, heroDTO) => {
+						if(err) { Logger.logError(err); callback(err, null); return; }
+						callback(null, heroDTO);
+					});
 				}
-				else
+				else {
 					_this.regen();
+					callback(null, {});
+				}
 			}
 
-			_logger.logInfo(JSON.stringify(_this.battleDTO.hero));
-			_logger.logInfo(JSON.stringify(_this.battleDTO.mob));
+			//_logger.logInfo(JSON.stringify(_this.battleDTO.hero));
+			//_logger.logInfo(JSON.stringify(_this.battleDTO.mob));
 		};
 
-		this.flee = function () {
+		this.flee = function (callback) {
 			_logger.logInfo("Battle.flee");
 
 			if (_this.status.over) {
@@ -159,20 +175,28 @@ module.exports =
 			_this.attack(firstUp, secondUp);
 
 			if (secondUp.hp <= 0) {
-				_this.battleEnded(firstUp, secondUp);
+				_this.battleEnded(firstUp, secondUp, (err, heroDTO) => {
+					if(err) { Logger.logError(err); callback(err, null); return; }
+					callback(null, heroDTO);
+				});
 			}
 			else {
 				_this.attack(secondUp, firstUp);
 
 				if (firstUp.hp <= 0) {
-					_this.battleEnded(secondUp, firstUp);
+					_this.battleEnded(secondUp, firstUp, (err, heroDTO) => {
+						if(err) { Logger.logError(err); callback(err, null); return; }
+						callback(null, heroDTO);
+					});
 				}
-				else
+				else {
 					_this.regen();
+					callback(null, {});
+				}
 			}
 
-			_logger.logInfo(JSON.stringify(_this.battleDTO.hero));
-			_logger.logInfo(JSON.stringify(_this.battleDTO.mob));
+			//_logger.logInfo(JSON.stringify(_this.battleDTO.hero));
+			//_logger.logInfo(JSON.stringify(_this.battleDTO.mob));
 		};
 
 		this.construct = function () {

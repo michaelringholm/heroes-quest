@@ -89,6 +89,7 @@ function MidgaardMainMap() {
 		//var mob = mobFactory.create();
 		_this.mapMatrix = mapDTO.rawMap.match(/[^\r\n]+/g);
 		_this.mapDefinition = JSON.parse(mapDTO.mapDefinition);
+		return _this;
 	};
 }
 

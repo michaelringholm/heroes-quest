@@ -6,10 +6,10 @@ var { Logger } = require("om-hq-lib");
 var { LoginDAO } = require("om-hq-lib");
 var { Battle } = require("om-hq-lib");
 var { BattleDAO } = require("om-hq-lib");
+var { HttpController } = require("om-hq-lib");
 
 const maxTurns = 50;
 const deckSize = 12;
-const ALLOWED_ORIGINS = ["http://localhost", "http://aws..."]
 // Callback is (error, response)
 exports.handler = function(event, context, callback) {
     Logger.logInfo(JSON.stringify(event));
@@ -22,20 +22,22 @@ exports.handler = function(event, context, callback) {
         return;
     }
     Logger.logInfo("method="+method);
-    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});HttpController
     var requestInput = JSON.parse(event.body);
-    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); respondError(origin, 500, "Access token missing!", callback); return; }
+    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); HttpController.respondError(origin, 500, "Access token missing!", callback); return; }
+    if(!requestInput.battleAction) { Logger.logError("Battle action missing!"); HttpController.respondError(origin, 500, "Battle action missing!", callback); return; }
     
     LoginDAO.getByToken(requestInput.accessToken, (err, loginDTO) => {
-        if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
+        if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
         HeroDAO.get(loginDTO.userGuid, loginDTO.activeHeroName, (err, heroDTO) => {
-            if(err) { Logger.logError(err); respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
+            if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
             heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
             BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
-                if(err) { Logger.logError(err, err.stack); respondError(origin, 500, "failed to get battle:" + err, callback); return; }
-                new Battle(battleDTO).nextRound();
-                respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
-                return;
+                if(err) { Logger.logError(err, err.stack); HttpController.respondError(origin, 500, "failed to get battle:" + err, callback); return; }                
+                new Battle(battleDTO).nextRound(requestInput.battleAction, (err, heroDTO) => {
+                    HttpController.respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
+                    return;
+                });                
             });
         });
     });
@@ -161,59 +163,6 @@ function getUserScore(userGuid, callback) {
                 callback(parseInt(userData.Item.score.N), parseInt(userData.Item.turnsUsed.N));
        }
     });
-}
-
-function tweakOrigin(origin) {
-    var tweakedOrigin = "-";
-    ALLOWED_ORIGINS.forEach(allowedOrigin => {
-        if(allowedOrigin == origin) tweakedOrigin = origin;
-    });
-    return tweakedOrigin;
-}
-
-function preFlightResponse(origin, referer, callback) {
-    var tweakedOrigin = "";
-    if(origin == ALLOWED_ORIGINS[0] || origin == ALLOWED_ORIGINS[1])
-        tweakedOrigin = origin;
-
-    const response = {
-        statusCode: 200,
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin' :   tweakOrigin(origin),
-            'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
-            'Access-Control-Allow-Headers' : "content-type"
-        },
-    };
-    callback(null, response);
-}
-
-function respondOK(origin, data, callback) {
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify({ response: 'Round played', data: data }),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin' : tweakOrigin(origin),
-            'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
-            'Access-Control-Allow-Headers' : "content-type"
-        },
-    };
-    callback(null, response);
-}
-
-function respondError(errorCode, errorMessage, callback) {
-    const response = {
-        statusCode: errorCode,
-        body: JSON.stringify({ response: errorMessage }),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin' : tweakOrigin(origin),
-            'Access-Control-Allow-Credentials' : true, // Required for cookies, authorization headers with HT
-            'Access-Control-Allow-Headers' : "content-type"
-        },
-    };
-    callback(null, response);
 }
 
 

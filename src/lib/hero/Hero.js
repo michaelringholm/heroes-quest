@@ -4,8 +4,8 @@ var BattleDTO = require('../battle/BattleDTO.js');
 var _battleDao = require('../battle/BattleDAO.js');
 var _heroDao = require('./HeroDAO.js');
 var Coordinate = require('../map/Coordinate.js');
-var _mapDao = require('../map/MapDAO.js');
-var _mapFactory = require('../map/MapCache.js');
+var MidgaardMainMap = require('../map/MidgaardMainMap.js');
+var MapCache = require('../map/MapCache.js');
 var _itemFactory = require('../item/ItemFactory.js');
 
 module.exports = function Hero(heroDTO) {	
@@ -144,7 +144,7 @@ module.exports = function Hero(heroDTO) {
 		}
 	};
 	
-	this.died = function(mob) {
+	this.died = function(mob, callback) {
 		_this.heroDTO.xp -= (mob.xp*10);
 		
 		if (_this.heroDTO.sta > 1) {
@@ -153,9 +153,12 @@ module.exports = function Hero(heroDTO) {
 		
 		_this.heroDTO.hp = 1;
 		_this.heroDTO.mana = _this.heroDTO.baseMana;
-		var baseTown = _mapFactory.create(_this.heroDTO.currentMapKey).getBaseTown();
-		_this.heroDTO.currentCoordinates.x = baseTown.x;
-		_this.heroDTO.currentCoordinates.y = baseTown.y;
+		MapCache.getMap(_this.heroDTO.currentMapKey, (err, mapDTO) => {
+			var baseTown = new MidgaardMainMap().build(mapDTO).getBaseTown();
+			_this.heroDTO.currentCoordinates.x = baseTown.x;
+			_this.heroDTO.currentCoordinates.y = baseTown.y;
+			callback(null, _this.heroDTO);
+		})
 	};
 	
 	this.construct = function() {

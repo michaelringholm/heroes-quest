@@ -1,4 +1,6 @@
 var { Logger } = require("om-hq-lib");
+var { Battle } = require("om-hq-lib");
+var { BattleActions } = require("om-hq-lib");
 var handler = require("./index.js");
 //var MAP = require("om-hq-map");
 
@@ -6,7 +8,8 @@ var handler = require("./index.js");
 console.log("Started...");
 
 var body = {
-    accessToken: process.env["accessToken"]
+    accessToken: process.env["accessToken"],    
+    battleAction: BattleActions.BattleActions.HEAL
 };
 
 var request = { 
