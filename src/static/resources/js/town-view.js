@@ -29,14 +29,14 @@ function TownView() {
         post(_this.ENTER_TOWN_URL, gameSession, _this.enterTownSuccess, _this.enterTownFailed);
     };
 
-    this.enterTownSuccess = function(data) {
+    this.enterTownSuccess = function(response) {
         logInfo("enter town OK!");
         logInfo(JSON.stringify(data));        
         
-        if(data.town) {
+        if(response.data.location.town) {
             soundPlayer.playSound("./resources/sounds/enter-town.mp3");
-            printDebug(data.hero);
-            var town = data.town;
+            printDebug(response.data.hero);
+            var town = response.data.location.town;
             logInfo("Entering the town of [" + town.name + "]!");
             _this.drawTown(town);
         }
@@ -119,11 +119,11 @@ function TownView() {
         post(_this.LEAVE_TOWN_URL, gameSession, _this.leaveTownSuccess, _this.leaveTownFailed);
     };
 
-    this.leaveTownSuccess = function(data) {
+    this.leaveTownSuccess = function(response) {
         logInfo("leave town OK!");
-        logInfo(JSON.stringify(data));
+        logInfo(JSON.stringify(response));
         
-        mapView.drawMap(data);
+        mapView.drawMap(response);
     };
 
     this.leaveTownFailed = function(errorMsg) {

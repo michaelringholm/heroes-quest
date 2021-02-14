@@ -49,12 +49,14 @@ function MapView() {
         $(canvasLayer2).show();
         $("#mapBottomToolbar").show();
         
+        $("#container").off("keypress");
         $("#container").keypress(function(e) { 
             if(e.which == 100 || e.which == 97 || e.which == 115 || e.which == 119) {
                 e.preventDefault();
                 moveHero(e.which);
             }
         });
+        
         
         var ctx1 = canvasLayer1.getContext("2d");
         var ctx2 = canvasLayer2.getContext("2d");

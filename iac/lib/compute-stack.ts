@@ -29,11 +29,14 @@ export class ComputeStack extends Core.Stack {
         this.createChooseHeroFunction(apiSecurityGroup, vpc);
         this.createMapMoveFunction(apiSecurityGroup, vpc);
         this.createEnterTownFunction(apiSecurityGroup, vpc);
-        this.createPlayRoundFunction(apiSecurityGroup, vpc);
         this.createLeaveTownFunction(apiSecurityGroup, vpc);
+        this.createViewCharacterFunction(apiSecurityGroup, vpc);
+        this.createVisitMeadhallFunction(apiSecurityGroup, vpc);
+        this.createTrainHeroFunction(apiSecurityGroup, vpc);
+        this.createVisitSmithyFunction(apiSecurityGroup, vpc);
         this.createBuyItemFunction(apiSecurityGroup, vpc);
         this.createSellItemFunction(apiSecurityGroup, vpc);
-        this.createTrainHeroFunction(apiSecurityGroup, vpc);
+        this.createPlayRoundFunction(apiSecurityGroup, vpc);        
         //this.createUpdateStatusFunction();
     }
 
@@ -82,26 +85,34 @@ export class ComputeStack extends Core.Stack {
     }*/
 
     private createTrainHeroFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "train-hero-fn", "index.handler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "train-hero-fn", "index.handler", "../src/api/train-hero", vpc);
     }
     private createLeaveTownFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "leave-town-fn", "index.handler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "leave-town-fn", "index.handler", "../src/api/leave-town", vpc);
     }
     private createEnterTownFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "enter-town-fn", "index.handler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "enter-town-fn", "index.handler", "../src/api/enter-town", vpc);
     }
+    private createVisitMeadhallFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "visit-meadhall-fn", "index.handler", "../src/api/visit-meadhall", vpc);
+    }
+    private createViewCharacterFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "view-character-fn", "index.handler", "../src/api/view-character", vpc);
+    }
+    private createVisitSmithyFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "visit-smithy-fn", "index.handler", "../src/api/visit-smithy", vpc);
+    }           
     private createMapMoveFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "map-move-fn", "index.handler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "map-move-fn", "index.handler", "../src/api/map-move", vpc);
     }    
-
     private createSellItemFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "sell-item-fn", "index.handler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "sell-item-fn", "index.handler", "../src/api/sell-item", vpc);
     }
     private createBuyItemFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "buy-item-fn", "index.handler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "buy-item-fn", "index.handler", "../src/api/buy-item", vpc);
     }
     private createPlayRoundFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
-        return this.createLambdaFunction(apiSecurityGroup, "play-round-fn", "index.handler", "../src/api/create-hero", vpc);
+        return this.createLambdaFunction(apiSecurityGroup, "play-round-fn", "index.handler", "../src/api/play-round", vpc);
     }    
     
     /*private createStepFunctionsTrigger(apiSecurityGroup: ISecurityGroup, vpc: IVpc, queue:SQS.IQueue) {

@@ -1,4 +1,4 @@
-var logger = require('../common/Logger.js');
+var Logger = require('../common/Logger.js');
 var Battle = require('../battle/Battle.js');
 var BattleDTO = require('../battle/BattleDTO.js');
 var _battleDao = require('../battle/BattleDAO.js');
@@ -57,7 +57,7 @@ module.exports = function Hero(heroDTO) {
 	
 	// east, west, north, south, up, down
 	this.move = function(requestInput, heroDTO, direction, map, callback)  {
-		logger.logInfo("Hero.move");
+		Logger.logInfo("Hero.move");
 		var targetCoordinates = new Coordinate(_this.heroDTO.currentCoordinates);
 		if(direction == "west")
 			targetCoordinates.x--;
@@ -68,7 +68,7 @@ module.exports = function Hero(heroDTO) {
 		else if(direction == "south")
 			targetCoordinates.y++;
 		
-		logger.logInfo("targetCoordinates=[" + JSON.stringify(targetCoordinates) + "]");
+		Logger.logInfo("targetCoordinates=[" + JSON.stringify(targetCoordinates) + "]");
 		
 		var targetLocation = map.getLocation(targetCoordinates);
 		
@@ -76,14 +76,14 @@ module.exports = function Hero(heroDTO) {
 			_this.heroDTO.currentCoordinates = targetCoordinates;
 			if(targetLocation.mob) {
 				//battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
-				logger.logInfo("Mob found at location, entering battle!");
+				Logger.logInfo("Mob found at location, entering battle!");
 				var battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);
 				var heroKey = _this.getHeroKey(requestInput.userGuid, heroDTO.heroName);
 				_battleDao.save(heroKey, battleDTO, (err, saved)=> {
-					if (err) { logger.logError("move(1):"+err, err.stack); callback(err, null); return; }
+					if (err) { Logger.logError("move(1):"+err, err.stack); callback(err, null); return; }
 					heroDTO.isInBattle = true;
 					_heroDao.updateBattleStatus(requestInput.userGuid, heroDTO.heroName, true, (err, saved)=> {
-						if (err) { logger.logError("move(2):"+err, err.stack); callback(err, null); return; }
+						if (err) { Logger.logError("move(2):"+err, err.stack); callback(err, null); return; }
 						callback(null, { newLocation: targetLocation, battle: battleDTO });
 						return ;
 					});
@@ -106,10 +106,36 @@ module.exports = function Hero(heroDTO) {
 		}
 		else {
 			var reason = "Not enough money to visit the mead hall, you need at least 1 copper!";
-			logger.logError(reason);
+			Logger.logError(reason);
 			return {success:false, reason:reason};
 		}
 	};
+
+	this.enterTown = function(loginDTO, heroDTO, callback) {
+		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't enter town"); callback("Hero is in battle, can't enter town", null); return; }
+		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
+		MapCache.getMap(heroDTO.currentMapKey, (err, mapDTO) => {
+			if(err) { Logger.logError(err); callback("Failed to et map:" + err, null); return; }
+			var map = new MidgaardMainMap();
+			map.build(mapDTO);
+			var location = map.getLocation(heroDTO.currentCoordinates);
+			var data = { hero: heroDTO, map: map, location: location };
+			callback(null, data);
+		});
+	};
+
+	this.leaveTown = function(loginDTO, heroDTO, callback) {
+		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't leave town"); callback("Hero is in battle, can't leave town", null); return; }
+		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
+		MapCache.getMap(heroDTO.currentMapKey, (err, mapDTO) => {
+			if(err) { Logger.logError(err); callback("Failed to et map:" + err, null); return; }
+			var map = new MidgaardMainMap();
+			map.build(mapDTO);
+			var location = map.getLocation(heroDTO.currentCoordinates);
+			var data = { hero: heroDTO, map: map, location: location };
+			callback(null, data);
+		});
+	};	
 	
 	this.getXpTarget = function() {
 		return _this.heroDTO.level*_this.heroDTO.level*1000;
@@ -133,13 +159,13 @@ module.exports = function Hero(heroDTO) {
 			}
 			else {
 				var errMsg = "Not enough money to train, you need at least [" + cost + "] copper!";
-				logger.logError(errMsg);
+				Logger.logError(errMsg);
 				return {trained:false, reason:errMsg};
 			}
 		}
 		else {
 			var errMsg = "Not enough xp to train, you need [" + (xpTarget-_this.heroDTO.xp*1) + "] more XP to become level [" + (_this.heroDTO.level+1) + "]!";
-			logger.logError(errMsg);
+			Logger.logError(errMsg);
 			return {trained:false, reason:errMsg};
 		}
 	};
@@ -162,7 +188,7 @@ module.exports = function Hero(heroDTO) {
 	};
 	
 	this.construct = function() {
-		logger.logInfo("Hero.construct");
+		Logger.logInfo("Hero.construct");
     	//for (var prop in anonObj) this[prop] = anonObj[prop];
   	};
   
