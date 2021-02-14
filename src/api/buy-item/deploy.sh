@@ -1,4 +1,4 @@
-functionName=om-hq-train-fn
+functionName=om-hq-visit-smithy-fn
 clear
 echo Compressing function code...
 #zip -rq drop.zip .

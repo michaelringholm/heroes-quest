@@ -8,9 +8,9 @@ function TownView() {
     var _this = this;
     this.ENTER_TOWN_URL = "https://41fldyiw0d.execute-api.eu-north-1.amazonaws.com/enter-town-fn";
     this.LEAVE_TOWN_URL = "https://08jkrc95x9.execute-api.eu-north-1.amazonaws.com/leave-town-fn";
-    this.TRAIN_URL = "https://lu7glqizf0.execute-api.eu-north-1.amazonaws.com/train-hero-fn";
-    this.VISIT_MEADHALL_URL = "https://9.execute-api.eu-north-1.amazonaws.com/leave-town-fn";
-    this.VIEW_CHARACTER_URL = "https://9.execute-api.eu-north-1.amazonaws.com/leave-town-fn";
+    this.TRAIN_HERO_URL = "https://lu7glqizf0.execute-api.eu-north-1.amazonaws.com/train-hero-fn";
+    this.VISIT_MEADHALL_URL = "https://1lsgtu3j59.execute-api.eu-north-1.amazonaws.com/visit-meadhall-fn";
+    this.VIEW_CHARACTER_URL = "https://d6ffyioj9l.execute-api.eu-north-1.amazonaws.com/view-character-fn";
     
     this.handleEvent = function(commandButton) {
         var townAction = $(commandButton).attr("data-town-action");
@@ -72,7 +72,7 @@ function TownView() {
 
     this.train = function() {
         gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
-        post(_this.TRAIN_URL, gameSession, _this.trainSuccess, _this.trainFailed);
+        post(_this.TRAIN_HERO_URL, gameSession, _this.trainSuccess, _this.trainFailed);
     };
 
     this.trainSuccess = function(data) {

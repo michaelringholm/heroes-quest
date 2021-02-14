@@ -6,9 +6,13 @@ $(function() {
 
 function SmithyView() {
     var _this = this;
+    this.VISIT_SMITHY_URL = "https://f7wlpgtjjb.execute-api.eu-north-1.amazonaws.com/visit-smithy-fn";
+    this.BUY_ITEM_URL = "https://49w9mw02l3.execute-api.eu-north-1.amazonaws.com/buy-item-fn";
+    this.SELL_ITEM_URL = "https://mx9bn3xhw0.execute-api.eu-north-1.amazonaws.com/sell-item-fn";
 
     this.enter = function() {
-        post("Town", "Smithy", gameSession, enterSuccess, enterFailed);
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.VISIT_SMITHY_URL, gameSession, enterSuccess, enterFailed);
     };
 
     var enterSuccess = function(data) {
@@ -67,8 +71,9 @@ function SmithyView() {
 
     // OLD
     function buySmithyItem(itemKey) {
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
         gameSession.itemKey = itemKey;
-        callMethod("http://" + hostIp + ":" + hostPort, "buySmithyItem", gameSession, buySmithyItemSuccess, buySmithyItemFailed);
+        callMethod(_this.BUY_ITEM_URL, gameSession, buySmithyItemSuccess, buySmithyItemFailed);
     };
     
     var buyItemSuccess = function(data) {
@@ -95,8 +100,9 @@ function SmithyView() {
     };
     
     function sellSmithyItem(itemKey) {
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
         gameSession.itemKey = itemKey;
-        callMethod("http://" + hostIp + ":" + hostPort, "sellSmithyItem", gameSession, sellSmithyItemSuccess, sellSmithyItemFailed);
+        callMethod(_this.SELL_ITEM_URL, gameSession, sellSmithyItemSuccess, sellSmithyItemFailed);
     };
     
     function sellSmithyItemSuccess(data) {

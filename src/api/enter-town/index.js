@@ -21,20 +21,20 @@ exports.handler = function(event, context, callback) {
     Logger.logInfo("method="+method);
     //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});HttpController
     var requestInput = JSON.parse(event.body);
-    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); HttpController.respondError(origin, 500, "Access token missing!", callback); return; }
-    if(!requestInput.battleAction) { Logger.logError("Battle action missing!"); HttpController.respondError(origin, 500, "Battle action missing!", callback); return; }
+    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); HttpController.respondError(origin, 500, "Access token missing!", callback); return; }    
     
     LoginDAO.getByToken(requestInput.accessToken, (err, loginDTO) => {
-        if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
+        if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: enter town(1):" + err, callback); return; }
         HeroDAO.get(loginDTO.userGuid, loginDTO.activeHeroName, (err, heroDTO) => {
-            if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
+            if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: enter town(2):" + err, callback); return; }
+            if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't enter town"); HttpController.respondError(origin, 500, "Hero is in battle, can't enter town", callback); return; }
             heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
-            BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
-                if(err) { Logger.logError(err, err.stack); HttpController.respondError(origin, 500, "failed to get battle:" + err, callback); return; }                
-                new Battle(battleDTO).nextRound(requestInput.battleAction, (err, heroDTO) => {
-                    HttpController.respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
-                    return;
-                });                
+            MapCache.getMap(hero.currentMapKey, (err, mapDTO) => {
+                if(err) { Logger.logError(err); respondError(origin, 500, "Failed to load map:" + err, callback); return; }
+                var map = new MidgaardMainMap();
+                map.build(mapDTO);
+                var data = { hero: hero, map: map };
+                HttpController.respondOK(origin, data, callback);
             });
         });
     });

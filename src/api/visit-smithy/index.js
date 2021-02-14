@@ -31,7 +31,7 @@ exports.handler = function(event, context, callback) {
             heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
             BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
                 if(err) { Logger.logError(err, err.stack); HttpController.respondError(origin, 500, "failed to get battle:" + err, callback); return; }                
-                new Battle(battleDTO).nextRound(loginDTO.userGuid, heroDTO.heroKey, requestInput.battleAction, (err, heroDTO) => {
+                new Battle(battleDTO).nextRound(requestInput.battleAction, (err, heroDTO) => {
                     HttpController.respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
                     return;
                 });                

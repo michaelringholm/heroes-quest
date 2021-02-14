@@ -1,11 +1,16 @@
 var _logger = require('../common/Logger.js');
 var BattleActions = require('./BattleActions.js');
 var Hero = require('../hero/Hero.js');
+const HeroDAO = require('../hero/HeroDAO.js');
+const BattleDAO = require('./BattleDAO.js');
+
 
 module.exports =
 	function Battle(battleDTO) {
 		var _this = this;
 		this.battleDTO = battleDTO;
+		this.heroKey;
+		this.userGuid;
 
 		this.getVersion = function () {
 			return "0.0.0.2";
@@ -118,8 +123,10 @@ module.exports =
 				_this.battleDTO.mob.hp = _this.battleDTO.mob.baseHp;
 		};
 
-		this.nextRound = function (heroBattleAction, callback) {
+		this.nextRound = function (userGuid, heroKey, heroBattleAction, callback) {
 			_logger.logInfo("Battle.nextRound");
+			_this.heroKey = heroKey;
+			_this.userGuid = userGuid;
 			_this.battleDTO.hero.currentBattleAction = heroBattleAction;
 
 			if (_this.battleDTO.status.over) {
@@ -137,7 +144,7 @@ module.exports =
 			if (secondUp.hp <= 0) {
 				_this.battleEnded(firstUp, secondUp, (err, heroDTO) => {
 					if(err) { Logger.logError(err); callback(err, null); return; }
-					callback(null, heroDTO);
+					_this.saveState(callback);
 				});
 			}
 			else {
@@ -146,17 +153,27 @@ module.exports =
 				if (firstUp.hp <= 0) {
 					_this.battleEnded(secondUp, firstUp, (err, heroDTO) => {
 						if(err) { Logger.logError(err); callback(err, null); return; }
-						callback(null, heroDTO);
+						_this.saveState(callback);
 					});
 				}
 				else {
 					_this.regen();
-					callback(null, {});
+					_this.saveState(callback);
 				}
 			}
 
 			//_logger.logInfo(JSON.stringify(_this.battleDTO.hero));
 			//_logger.logInfo(JSON.stringify(_this.battleDTO.mob));
+		};
+
+		this.saveState = function(callback) {
+			BattleDAO.save(_this.heroKey, _this.battleDTO, (err, battleDTO) => {
+				if(err) { Logger.logError(err); callback(err, null); return; }
+				HeroDAO.save(_this.userGuid, _this.battleDTO.hero, (err, heroDTO) => {
+					if(err) { Logger.logError(err); callback(err, null); return; }
+					callback(null, _this.battleDTO);
+				});
+			});	
 		};
 
 		this.flee = function (callback) {
