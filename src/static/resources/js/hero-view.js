@@ -33,20 +33,20 @@ function HeroView() {
         return imgSrc;
     };    
     
-    this.chooseHeroSuccess = function(data) {
+    this.chooseHeroSuccess = function(response) {
         logDebug("choose hero OK!");
-        if(data) {
-            printDebug(data.hero);
-            if(data.battle && data.battle.mob && data.battle.hero) { // The hero is already in a fight
-                battleView.startOrResumeBattle(data.battle);
+        if(response) {
+            printDebug(response.data.hero);
+            if(response.data.battle && response.data.battle.mob && response.data.battle.hero) { // The hero is already in a fight
+                battleView.startOrResumeBattle(response.data.battle);
                 logDebug("you resume the battle!");
             }		
-            else if(data.town)
-                townView.drawTown(data.town);
+            else if(response.data.town)
+                townView.drawTown(response.data.town);
             else
-                mapView.drawMap(data);
+                mapView.drawMap(response.data);
         }
-        logDebug(JSON.stringify(data));
+        logDebug(JSON.stringify(response.data));
     };
     
     this.chooseHeroFailed = function(errorMsg) {

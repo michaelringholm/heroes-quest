@@ -6,6 +6,11 @@ $(function() {
 
 function TownView() {
     var _this = this;
+    this.ENTER_TOWN_URL = "https://41fldyiw0d.execute-api.eu-north-1.amazonaws.com/enter-town-fn";
+    this.LEAVE_TOWN_URL = "https://08jkrc95x9.execute-api.eu-north-1.amazonaws.com/leave-town-fn";
+    this.TRAIN_URL = "https://lu7glqizf0.execute-api.eu-north-1.amazonaws.com/train-hero-fn";
+    this.VISIT_MEADHALL_URL = "https://9.execute-api.eu-north-1.amazonaws.com/leave-town-fn";
+    this.VIEW_CHARACTER_URL = "https://9.execute-api.eu-north-1.amazonaws.com/leave-town-fn";
     
     this.handleEvent = function(commandButton) {
         var townAction = $(commandButton).attr("data-town-action");
@@ -20,7 +25,8 @@ function TownView() {
     };
 
     this.enterTown = function() {
-        post("Map", "EnterTown", gameSession, _this.enterTownSuccess, _this.enterTownFailed);
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.ENTER_TOWN_URL, gameSession, _this.enterTownSuccess, _this.enterTownFailed);
     };
 
     this.enterTownSuccess = function(data) {
@@ -43,7 +49,8 @@ function TownView() {
     };
     
     this.viewCharacter = function() {
-        post("Town", "Character", gameSession, _this.viewCharacterSuccess, _this.viewCharacterFailed);
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.VIEW_CHARACTER_URL, gameSession, _this.viewCharacterSuccess, _this.viewCharacterFailed);
     };
 
     this.viewCharacterSuccess = function(data) {
@@ -64,7 +71,8 @@ function TownView() {
     };
 
     this.train = function() {
-        post("Town", "Train", gameSession, _this.trainSuccess, _this.trainFailed);
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.TRAIN_URL, gameSession, _this.trainSuccess, _this.trainFailed);
     };
 
     this.trainSuccess = function(data) {
@@ -85,7 +93,8 @@ function TownView() {
     };
 
     this.visitMeadhall = function() {
-        post("Town", "Meadhall", gameSession, _this.visitMeadhallSuccess, _this.visitMeadhallFailed);
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.VISIT_MEADHALL_URL, gameSession, _this.visitMeadhallSuccess, _this.visitMeadhallFailed);
     };
 
     this.visitMeadhallSuccess = function(data) {
@@ -106,7 +115,8 @@ function TownView() {
     };
 
     this.leaveTown = function() {
-        post("Town", "Leave", gameSession, _this.leaveTownSuccess, _this.leaveTownFailed);
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.LEAVE_TOWN_URL, gameSession, _this.leaveTownSuccess, _this.leaveTownFailed);
     };
 
     this.leaveTownSuccess = function(data) {

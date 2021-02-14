@@ -1,4 +1,4 @@
-functionName=om-hq-play-round-fn
+functionName=om-hq-leave-town-fn
 clear
 echo Compressing function code...
 #zip -rq drop.zip .

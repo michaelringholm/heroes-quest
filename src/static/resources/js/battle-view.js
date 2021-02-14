@@ -10,6 +10,7 @@ $(function() {
 
 function BattleView() {
     var _this = this;
+    this.PLAY_ROUND_URL = "https://xirsfgg6tb.execute-api.eu-north-1.amazonaws.com/play-round-fn";
     //var heroView = new HeroView();
     var deathCard = "./resources/images/battle/card-dead.png";
 
@@ -24,9 +25,11 @@ function BattleView() {
         var ability = $(commandButton).attr("data-ability");
         if(ability) {
             $(commandButton).effect("pulsate", 2000);        
-            gameSession.ability = ability;
+            //gameSession.ability = ability;
+            gameSession.battleAction = ability;
+            gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
         }
-        post("Battle", "NextRound", gameSession, nextRoundSuccess, nextRoundFailed);
+        post(_this.PLAY_ROUND_URL, gameSession, nextRoundSuccess, nextRoundFailed);
     };
     
     var nextRoundSuccess = function(data) {
