@@ -22,6 +22,7 @@ function MobFactory() {
 		if(randomIndex == 4) randomMob = {key: "giant-spider", name: "Giant spider", baseHp:36, hp:36, minAtk:3, maxAtk:6, ac:3,  regen:1, luck:2, atkTypes:["melee", "poison I"], xp:95, copper:100, items:[item]};
 		if(randomIndex == 5) randomMob = {key: "troll", name: "Troll", baseHp:65, hp:65, minAtk:3, maxAtk:8, ac:4,  regen:2, luck:2, atkTypes:["melee"], xp:300, copper:360, items:[item]};
 		if(randomIndex == 6) randomMob = {key: "wolf", name: "Wolf", baseHp:19, hp:19, minAtk:1, maxAtk:4, ac:1,  regen:0, luck:2, atkTypes:["melee"], xp:8, copper:5, items:[item]};		
+		if(randomIndex == 7) randomMob = {key: "deer", name: "Deer", baseHp:12, hp:12, minAtk:1, maxAtk:3, ac:2,  regen:0, luck:4, atkTypes:["melee"], xp:5, copper:0, items:[item]};		
 		if(randomIndex == 8) randomMob = {key: "shadow", name: "Shadow", baseHp:28, hp:28, minAtk:3, maxAtk:5, ac:4,  regen:0, luck:2, atkTypes:["melee"], xp:160, copper:85, items:[item]};
 		
 		if(randomMob)

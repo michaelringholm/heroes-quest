@@ -32,18 +32,18 @@ function BattleView() {
         post(_this.PLAY_ROUND_URL, gameSession, nextRoundSuccess, nextRoundFailed);
     };
     
-    var nextRoundSuccess = function(data) {
+    var nextRoundSuccess = function(response) {
         logInfo("next round OK!");
         
-        if(data) {
-            if(data.battle) {
-                var battle = data.battle;
-                var hero = data.hero;
+        if(response.data) {
+            if(response.data.battle && !response.data.battle.status.over) {
+                var battle = response.data.battle;
+                var hero = response.data.hero;
                 drawBattleScreen(battle);			
             }
             else {
                 logInfo("Battle was already over!");
-                mapView.drawMap(data);
+                mapView.drawMap(response.data);
             }
         }
     };

@@ -8,8 +8,7 @@ var handler = require("./index.js");
 console.log("Started...");
 
 var body = {
-    accessToken: process.env["accessToken"],    
-    battleAction: BattleActions.BattleActions.HEAL
+    accessToken: process.env["accessToken"]
 };
 
 var request = { 

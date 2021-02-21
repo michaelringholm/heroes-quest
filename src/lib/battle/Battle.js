@@ -1,8 +1,8 @@
-var _logger = require('../common/Logger.js');
+var Logger = require('../common/Logger.js');
 var BattleActions = require('./BattleActions.js');
 var Hero = require('../hero/Hero.js');
-const HeroDAO = require('../hero/HeroDAO.js');
-const BattleDAO = require('./BattleDAO.js');
+var HeroDAO = require('../hero/HeroDAO.js');
+var BattleDAO = require('./BattleDAO.js');
 
 
 module.exports =
@@ -16,13 +16,91 @@ module.exports =
 			return "0.0.0.2";
 		};
 
-		this.drawB = function () {
-			_this.drawP(_this.battleDTO.hero);
-			_this.drawP(_this.battleDTO.mob);
+		this.nextRound = function (userGuid, heroKey, heroBattleAction, callback) {
+			Logger.logInfo("Battle.nextRound");
+			_this.heroKey = heroKey;
+			_this.userGuid = userGuid;
+			if(!_this.battleDTO.hero.conditions) _this.battleDTO.hero.conditions = new Array();
+			if(!_this.battleDTO.mob.conditions) _this.battleDTO.mob.conditions = new Array();
+			_this.battleDTO.hero.currentBattleAction = heroBattleAction;
+			predictMobBattleAction();
+
+			if (_this.battleDTO.status.over) {
+				Logger.logInfo("battle is over!");
+				saveState(callback); return;
+			}
+			
+			_this.battleDTO.round++;
+			_this.battleDTO.hero.hp += 500; // TEMP HACK
+			_this.battleDTO.mob.hp += 500; // TEMP HACK			
+			var roundInfo = getRoundInfo();
+			Logger.logInfo("*****ROUND INFO*******\n"+roundInfo);
+			var firstUp = getFirstUp(_this.battleDTO.hero, _this.battleDTO.mob);
+			var secondUp = getSecondUp(_this.battleDTO.hero, _this.battleDTO.mob);
+
+			attack(firstUp, secondUp);
+
+			if (secondUp.hp <= 0) {
+				_this.battleEnded(firstUp, secondUp, (err, heroDTO) => {
+					if(err) { Logger.logError(err); callback(err, null); return; }
+					saveState(callback); return;
+				});
+			}
+			else {
+				attack(secondUp, firstUp);
+
+				if (firstUp.hp <= 0) {
+					battleEnded(secondUp, firstUp, (err, heroDTO) => {
+						if(err) { Logger.logError(err); callback(err, null); return; }
+						saveState(callback); return;
+					});
+				}
+				else {
+					regen();
+					saveState(callback); return;
+				}
+			}
+
+			//Logger.logInfo(JSON.stringify(_this.battleDTO.hero));
+			//Logger.logInfo(JSON.stringify(_this.battleDTO.mob));
 		};
 
-		this.drawP = function (p) {
-			//$(p.div).html("a:" + p.a + " # h:" + p.h);
+		var getRoundInfo = function() {
+			var roundInfo = "Round:" +  _this.battleDTO.round + "\n";
+			roundInfo += "Hero HP:" + _this.battleDTO.hero.hp + "\n";
+			roundInfo += "Hero ACT:" + _this.battleDTO.hero.currentBattleAction + "\n";
+			roundInfo += "Mob HP:" + _this.battleDTO.mob.hp + "\n";
+			roundInfo += "Mob ACT:" + _this.battleDTO.mob.currentBattleAction + "\n";
+			return roundInfo;
+		};
+
+		var predictMobBattleAction = function() {
+			var mob = _this.battleDTO.mob;
+			if(mob.atkTypes.length <= 0) { Logger.logError("No attack types defined for mob!"); mob.currentBattleAction = BattleActions.BattleActions.MELEE; return; }
+			var rand = Math.random();
+			Logger.logInfo("Rand:"+rand);
+			Logger.logInfo("Mob.atkTypes.len:"+mob.atkTypes.length);
+			var randomAtkIndex = Math.round(rand*(mob.atkTypes.length-1));
+			mob.currentBattleAction = mob.atkTypes[randomAtkIndex];
+			Logger.logInfo("AtkIndx:"+randomAtkIndex);
+			Logger.logInfo("Mob.ACT:"+mob.currentBattleAction);
+		}
+
+		var attack = function (attacker, defender) {
+			Logger.logInfo("Battle.attack");
+
+			var fnBattleAction = getBattleAction(attacker.currentBattleAction);
+			fnBattleAction(attacker, defender);			
+		};
+
+		var getBattleAction = function(battleAction) {
+			if(battleAction) battleAction = battleAction.toLowerCase().trim();
+			if (battleAction == "melee") return meleeAttack;
+			if (battleAction == "heal") return heal;
+			if (battleAction == "poison i") return poisonI;
+			
+			Logger.logError("Battle action [" + battleAction + "] not implemented, reverting to melee attack!");
+			return meleeAttack;			
 		};
 
 		var meleeAttack = function (attacker, defender) {
@@ -35,67 +113,55 @@ module.exports =
 			defender.hp = defender.hp - damageImpact;
 		};
 
-		var heal = function (healTarget) {
+		var heal = function (attacker, defender) {
+			var healTarget = attacker;
 			var healAmount = Math.round(healTarget.level + (Math.random() * (healTarget.level + 6)));
-			if (healAmount < 0)
-				healAmount = 0;
-
-			if ((healAmount + healTarget.hp) > healTarget.baseHp)
-				healTarget.hp = healTarget.baseHp;
-			else
-				healTarget.hp += healAmount;
+			if (healAmount < 0) healAmount = 0;
+			if ((healAmount + healTarget.hp) > healTarget.baseHp) healTarget.hp = healTarget.baseHp;
+			else healTarget.hp += healAmount;
 			healTarget.abilityImpact = healAmount;
 		};
 
-		this.attack = function (attacker, defender) {
-			_logger.logInfo("Battle.attack");
+		var poisonI = function (attacker, defender) {
+			var poisonDmg = Math.round(attacker.level + (Math.random() * (attacker.level + 6)));
+			if (poisonDmg < 0) poisonDmg = 0;
+			defender.hp -= poisonDmg;
+			attacker.abilityImpact = poisonDmg;			
+			defender.conditions.push("poisonI");
+		};			
 
-			if (attacker.currentBattleAction == "melee")
-				meleeAttack(attacker, defender);
-			else if (attacker.currentBattleAction == "heal")
-				heal(attacker);
-			else {
-				_logger.logError("Battle action [" + attacker.currentBattleAction + "] not implemented, reverting to melee attack!");
-				meleeAttack(attacker, defender);
-			}
-		};
-
-		this.getFirstUp = function (playerX, playerY) {
-			if (playerX.luck > playerY.luck)
-				return playerX;
-
+		var getFirstUp = function (playerX, playerY) {
+			if (playerX.luck > playerY.luck) return playerX;
 			return playerY;
 		};
 
-		this.getSecondUp = function (playerX, playerY) {
-			if (playerX.luck > playerY.luck)
-				return playerY;
-
+		var getSecondUp = function (playerX, playerY) {
+			if (playerX.luck > playerY.luck) return playerY;
 			return playerX;
 		};
 
-		this.battleEnded = function (winner, loser, callback) {			
+		var battleEnded = function (winner, loser, callback) {			
 			_this.battleDTO.status.over = true;
 
 			if (winner.heroId == _this.battleDTO.hero.heroId) {
 				_this.battleDTO.status.winner = winner.heroName;
 				_this.battleDTO.status.loser = loser.name;
-				_logger.logInfo(winner.heroName + " won! and " + loser.name + " lost!");
-				_this.heroWon();
+				Logger.logInfo(winner.heroName + " won! and " + loser.name + " lost!");
+				heroWon();
 			}
 			else {
 				_this.battleDTO.status.winner = winner.name;
 				_this.battleDTO.status.loser = loser.heroName;
-				_logger.logInfo(winner.name + " won! and " + loser.heroName + " lost!");
-				_this.heroLost((err, heroDTO) => {
+				Logger.logInfo(winner.name + " won! and " + loser.heroName + " lost!");
+				heroLost((err, heroDTO) => {
 					if(err) { Logger.logError(err); callback(err, null); return; }
 					callback(null, heroDTO);
 				});
 			}			
 		};
 
-		this.heroWon = function () {
-			_logger.logInfo("hero won the battle!");
+		var heroWon = function () {
+			Logger.logInfo("hero won the battle!");
 			_this.battleDTO.hero.xp += _this.battleDTO.mob.xp;
 			_this.battleDTO.hero.gold += _this.battleDTO.mob.gold;
 			_this.battleDTO.hero.silver += _this.battleDTO.mob.silver;
@@ -105,15 +171,15 @@ module.exports =
 				_this.battleDTO.hero.items.push(_this.battleDTO.mob.items[itemIndex]);
 		};
 
-		this.heroLost = function (callback) {
-			_logger.logInfo("hero lost the battle!");
+		var heroLost = function (callback) {
+			Logger.logInfo("hero lost the battle!");
 			new Hero(_this.battleDTO.hero).died(_this.battleDTO.mob, (err, heroDTO) => {
 				if(err) { Logger.logError(err); callback(err, null); return; }
 				callback(null, heroDTO);
 			});
 		};
 
-		this.regen = function () {
+		var regen = function () {
 			_this.battleDTO.hero.hp += _this.battleDTO.hero.regen;
 			_this.battleDTO.mob.hp += _this.battleDTO.mob.regen;
 
@@ -121,52 +187,10 @@ module.exports =
 				_this.battleDTO.hero.hp = _this.battleDTO.hero.baseHp;
 			if (_this.battleDTO.mob.hp > _this.battleDTO.mob.baseHp)
 				_this.battleDTO.mob.hp = _this.battleDTO.mob.baseHp;
-		};
+		};		
 
-		this.nextRound = function (userGuid, heroKey, heroBattleAction, callback) {
-			_logger.logInfo("Battle.nextRound");
-			_this.heroKey = heroKey;
-			_this.userGuid = userGuid;
-			_this.battleDTO.hero.currentBattleAction = heroBattleAction;
-
-			if (_this.battleDTO.status.over) {
-				_logger.logInfo("battle is over!");
-				return;
-			}
-			else
-				_this.battleDTO.round++;
-
-			var firstUp = _this.getFirstUp(_this.battleDTO.hero, _this.battleDTO.mob);
-			var secondUp = _this.getSecondUp(_this.battleDTO.hero, _this.battleDTO.mob);
-
-			_this.attack(firstUp, secondUp);
-
-			if (secondUp.hp <= 0) {
-				_this.battleEnded(firstUp, secondUp, (err, heroDTO) => {
-					if(err) { Logger.logError(err); callback(err, null); return; }
-					_this.saveState(callback);
-				});
-			}
-			else {
-				_this.attack(secondUp, firstUp);
-
-				if (firstUp.hp <= 0) {
-					_this.battleEnded(secondUp, firstUp, (err, heroDTO) => {
-						if(err) { Logger.logError(err); callback(err, null); return; }
-						_this.saveState(callback);
-					});
-				}
-				else {
-					_this.regen();
-					_this.saveState(callback);
-				}
-			}
-
-			//_logger.logInfo(JSON.stringify(_this.battleDTO.hero));
-			//_logger.logInfo(JSON.stringify(_this.battleDTO.mob));
-		};
-
-		this.saveState = function(callback) {
+		var saveState = function(callback) {
+			Logger.logInfo("Battle.saveState()");
 			BattleDAO.save(_this.heroKey, _this.battleDTO, (err, battleDTO) => {
 				if(err) { Logger.logError(err); callback(err, null); return; }
 				HeroDAO.save(_this.userGuid, _this.battleDTO.hero, (err, heroDTO) => {
@@ -176,48 +200,57 @@ module.exports =
 			});	
 		};
 
-		this.flee = function (callback) {
-			_logger.logInfo("Battle.flee");
+		this.drawB = function () {
+			_this.drawP(_this.battleDTO.hero);
+			_this.drawP(_this.battleDTO.mob);
+		};
+
+		this.drawP = function (p) {
+			//$(p.div).html("a:" + p.a + " # h:" + p.h);
+		};		
+
+		var flee = function (callback) {
+			Logger.logInfo("Battle.flee");
 
 			if (_this.status.over) {
-				_logger.logInfo("battle is over!");
+				Logger.logInfo("battle is over!");
 				return;
 			}
 			else
 				_this.battleDTO.round++;
 
-			var firstUp = _this.getFirstUp(_this.battleDTO.hero, _this.battleDTO.mob);
-			var secondUp = _this.getSecondUp(_this.battleDTO.hero, _this.battleDTO.mob);
+			var firstUp = getFirstUp(_this.battleDTO.hero, _this.battleDTO.mob);
+			var secondUp = getSecondUp(_this.battleDTO.hero, _this.battleDTO.mob);
 
-			_this.attack(firstUp, secondUp);
+			attack(firstUp, secondUp);
 
 			if (secondUp.hp <= 0) {
-				_this.battleEnded(firstUp, secondUp, (err, heroDTO) => {
+				battleEnded(firstUp, secondUp, (err, heroDTO) => {
 					if(err) { Logger.logError(err); callback(err, null); return; }
 					callback(null, heroDTO);
 				});
 			}
 			else {
-				_this.attack(secondUp, firstUp);
+				attack(secondUp, firstUp);
 
 				if (firstUp.hp <= 0) {
-					_this.battleEnded(secondUp, firstUp, (err, heroDTO) => {
+					battleEnded(secondUp, firstUp, (err, heroDTO) => {
 						if(err) { Logger.logError(err); callback(err, null); return; }
 						callback(null, heroDTO);
 					});
 				}
 				else {
-					_this.regen();
+					regen();
 					callback(null, {});
 				}
 			}
 
-			//_logger.logInfo(JSON.stringify(_this.battleDTO.hero));
-			//_logger.logInfo(JSON.stringify(_this.battleDTO.mob));
+			//Logger.logInfo(JSON.stringify(_this.battleDTO.hero));
+			//Logger.logInfo(JSON.stringify(_this.battleDTO.mob));
 		};
 
 		this.construct = function () {
-			_logger.logInfo("Battle.construct");
+			Logger.logInfo("Battle.construct");
 			/*_this.drawB();
 			$("#nextR").click(function() { 
 				_this.nextR( {aT:"mel"}, {aT:"mel"} ); 

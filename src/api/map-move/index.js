@@ -65,12 +65,14 @@ exports.handler = function(event, context, callback) {
                     else {
                         heroDTO.currentCoordinates;
                         Logger.logInfo("coords are:", heroDTO.currentCoordinates);
-                        new Hero(heroDTO).move(requestInput, heroDTO, direction, map, (err, moveResult) => {
+                        new Hero(heroDTO).move(loginDTO.userGuid, heroDTO, direction, map, (err, moveResult) => {
                             if(err) { Logger.logError(err); respondError(origin, 500, "Failed to move" + err, callback); return; }
+                            Logger.logInfo("Move result:" + JSON.stringify(moveResult));
                             if (moveResult.newLocation) {
+                                respondOK(origin, moveResult, callback); return;
                                 //_heroDao.save(serverLogin.activeHero);
                                 //var battle = _battleCache[serverLogin.activeHero.heroId];
-                                if (moveResult.battle) {
+                                /*if (moveResult.battle) {
                                     HeroDAO.updateBattleStatus(requestInput.userGuid, heroDTO.heroName, true, (err, updatedHero) => {
                                         if(err) { Logger.logError(err); respondError(origin, 500, "Failed to update battle:" + err, callback); return; }
                                         respondOK(origin, moveResult, callback);
@@ -83,7 +85,7 @@ exports.handler = function(event, context, callback) {
                                         respondOK(origin, moveResult, callback);
                                         return;
                                     });
-                                }
+                                }*/
                             }
                             else { Logger.logError(err); respondError(origin, 500, "Invalid location!", callback); return; }   
                         });                           

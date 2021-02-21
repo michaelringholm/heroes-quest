@@ -9,14 +9,14 @@ function BattleDTO(hero, mob) {
 	
 	this.round = 0;
 	this.hero = hero;
-  this.mob =  mob;
+  	this.mob =  mob;
 	this.status = {over:false, winner:"", loser:""};
    
-  this.construct = function() {
+  	this.construct = function() {
 		_logger.logInfo("BattleDTO.construct");
-  };
+  	};
   
-  _this.construct();
+  	_this.construct();
 }
 
 module.exports = BattleDTO;

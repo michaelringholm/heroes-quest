@@ -1,16 +1,19 @@
 var Logger = require('../common/Logger.js');
 var Battle = require('../battle/Battle.js');
 var BattleDTO = require('../battle/BattleDTO.js');
-var _battleDao = require('../battle/BattleDAO.js');
-var _heroDao = require('./HeroDAO.js');
+var BattleDAO = require('../battle/BattleDAO.js');
+var HeroDAO = require('./HeroDAO.js');
 var Coordinate = require('../map/Coordinate.js');
 var MidgaardMainMap = require('../map/MidgaardMainMap.js');
 var MapCache = require('../map/MapCache.js');
 var _itemFactory = require('../item/ItemFactory.js');
+var HeroDAO = require('./HeroDAO.js');
 
 module.exports = function Hero(heroDTO) {	
 	var _this = this;
 	this.heroDTO = heroDTO;
+	this.battleDTO;
+	this.userGuid;
 	this.equipItem = function(itemId) {		
 		// Find and remove equipped item from inventory
 		var itemIndexToRemove = -1;
@@ -56,7 +59,7 @@ module.exports = function Hero(heroDTO) {
 	};
 	
 	// east, west, north, south, up, down
-	this.move = function(requestInput, heroDTO, direction, map, callback)  {
+	this.move = function(userGuid, heroDTO, direction, map, callback)  {
 		Logger.logInfo("Hero.move");
 		var targetCoordinates = new Coordinate(_this.heroDTO.currentCoordinates);
 		if(direction == "west")
@@ -68,6 +71,8 @@ module.exports = function Hero(heroDTO) {
 		else if(direction == "south")
 			targetCoordinates.y++;
 		
+		_this.heroKey = _this.getHeroKey(userGuid, heroDTO.heroName);
+		_this.userGuid = userGuid;
 		Logger.logInfo("targetCoordinates=[" + JSON.stringify(targetCoordinates) + "]");
 		
 		var targetLocation = map.getLocation(targetCoordinates);
@@ -77,37 +82,44 @@ module.exports = function Hero(heroDTO) {
 			if(targetLocation.mob) {
 				//battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
 				Logger.logInfo("Mob found at location, entering battle!");
-				var battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);
-				var heroKey = _this.getHeroKey(requestInput.userGuid, heroDTO.heroName);
-				_battleDao.save(heroKey, battleDTO, (err, saved)=> {
-					if (err) { Logger.logError("move(1):"+err, err.stack); callback(err, null); return; }
-					heroDTO.isInBattle = true;
-					_heroDao.updateBattleStatus(requestInput.userGuid, heroDTO.heroName, true, (err, saved)=> {
-						if (err) { Logger.logError("move(2):"+err, err.stack); callback(err, null); return; }
-						callback(null, { newLocation: targetLocation, battle: battleDTO });
-						return ;
-					});
+				_this.battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);				
+				saveState(callback, (err, data) => {
+					if (err) { Logger.logError("move(3):"+err, err.stack); callback(err, null); return; }
+					callback(null, { newLocation: targetLocation, battle: _this.battleDTO }); return;
 				});				
 			}
 			else
-				callback(null, { newLocation: targetLocation, battle: null });
+				callback(null, { newLocation: targetLocation, battle: null }); return;
 		}
 		else
 			callback("Invalid location", null);
 	};
+
+	var saveState = function(callback) {
+		BattleDAO.save(_this.heroKey, _this.battleDTO, (err, saved)=> {
+			if (err) { Logger.logError("move(1):"+err, err.stack); callback(err, null); return; }
+			_this.heroDTO.isInBattle = true;
+			HeroDAO.save(_this.userGuid, _this.heroDTO, (err, saved)=> {
+				if (err) { Logger.logError("move(4):"+err, err.stack); callback(err, null); return; }
+				callback(null, {});
+			});
+		});
+	};
 	
-	this.visitMeadhall = function() {
+	this.visitMeadhall = function(userGuid, heroDTO, callback) {
 		if(_this.heroDTO.copper > 0) {
 			_this.heroDTO.copper -= 1;
 			_this.heroDTO.hp = _this.heroDTO.baseHp;
 			_this.heroDTO.mana = _this.heroDTO.baseMana;
 			_this.heroDTO.rested = true;
-			return {success:true};
+			HeroDAO.save(userGuid, heroDTO, (err, heroDTO) => {
+				if(err) { Logger.logError(err); callback("Failed to save hero:" + err, null); return; }
+				callback(null, {success:true, rested:true, hero:heroDTO});
+			});
 		}
 		else {
 			var reason = "Not enough money to visit the mead hall, you need at least 1 copper!";
-			Logger.logError(reason);
-			return {success:false, reason:reason};
+			callback(null, {success:false, rested:false});
 		}
 	};
 
@@ -115,7 +127,7 @@ module.exports = function Hero(heroDTO) {
 		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't enter town"); callback("Hero is in battle, can't enter town", null); return; }
 		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
 		MapCache.getMap(heroDTO.currentMapKey, (err, mapDTO) => {
-			if(err) { Logger.logError(err); callback("Failed to et map:" + err, null); return; }
+			if(err) { Logger.logError(err); callback("Failed to enter town:" + err, null); return; }
 			var map = new MidgaardMainMap();
 			map.build(mapDTO);
 			var location = map.getLocation(heroDTO.currentCoordinates);

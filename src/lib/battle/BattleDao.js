@@ -69,7 +69,7 @@ function BattleDao() {
 				s3.putObject(params, function(err, data) {
 					if (err) { Logger.logError("save:"+err, err.stack); callback(err, null); return; }
 					Logger.logInfo("BattleDao.save(2)");
-					Logger.logInfo(data);
+					Logger.logInfo(JSON.stringify(data));
 					callback(null, true);
 				});
 				var updateTime = new Date();

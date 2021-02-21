@@ -56,7 +56,7 @@ function LoginDAO() {
 		ddb.scan(params, function (err, loginItems) {
 			if(err) { callback(err, null); return; }
 			logger.logInfo("loginItems=" + JSON.stringify(loginItems));
-			if(loginItems.Items.length == 0) throw new Error("The access key was not found!");
+			if(loginItems.Items.length == 0) throw new Error("The access token was not found!");
 			if(loginItems.Items.length > 1) throw new Error("Multiple access keys found, something is very wrong!");
 			var loginDTO = AWS.DynamoDB.Converter.unmarshall(loginItems.Items[0]);
 			callback(null, loginDTO);

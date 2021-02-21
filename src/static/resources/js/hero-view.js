@@ -44,7 +44,7 @@ function HeroView() {
             else if(response.data.town)
                 townView.drawTown(response.data.town);
             else
-                mapView.drawMap(response.data);
+                mapView.drawMap(response);
         }
         logDebug(JSON.stringify(response.data));
     };
