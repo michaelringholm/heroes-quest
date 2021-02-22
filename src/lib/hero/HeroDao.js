@@ -40,8 +40,8 @@ function HeroDAO() {
 			Item: {
 			  'userGuid': {S: userGuid},
 			  'heroName': {S: heroDTO.heroName},
-			  'heroClass': {S: heroDTO.heroClass},
-			  'isInBattle': {BOOL: false}
+			  'heroClass': {S: heroDTO.heroClass}
+			  //'isInBattle': {BOOL: heroDTO.isInBattle}
 			},
 			ReturnConsumedCapacity: "TOTAL", 
 			//ProjectionExpression: 'ATTRIBUTE_NAME'
@@ -90,7 +90,7 @@ function HeroDAO() {
 					if (err) { Logger.logInfo(err); callback(err, null); return; }
 					//if(!jsonData) { callback("No json data found for hero."); return; }
 					//heroDTO = new HeroDTO(JSON.parse(jsonData));
-					heroDTO.isInBattle = heroItem.isInBattle; // IMPORTANT
+					//heroDTO.isInBattle = heroItem.isInBattle; // IMPORTANT
 					Logger.logInfo("HeroDTO:");
 					Logger.logInfo(JSON.stringify(heroDTO));
 					callback(null, heroDTO);
@@ -146,7 +146,7 @@ function HeroDAO() {
 			Logger.error("Skipping save of battles as the battles hashmap in invalid!");
 	};
 
-	this.updateBattleStatus = function(userGuid, heroName, isInBattle, callback) {
+	/*this.updateBattleStatus = function(userGuid, heroName, isInBattle, callback) {
 		Logger.logInfo("HeroDAO.updateBattleStatus()");
 		if(!userGuid) { Logger.logError("Missing field [userGuid]."); callback("Missing field [userGuid].", null); return; }
 		if(!heroName) { Logger.logError("Missing field [heroName]."); callback("Missing field [heroName].", null); return; }
@@ -173,7 +173,7 @@ function HeroDAO() {
 			//callback(null, heroDTO);
 			callback(null, {});
 		})
-	}	
+	}	*/
 
 	this.getAll = function(userGuid, callback) {
 		Logger.logInfo("HeroDao.getAll()");

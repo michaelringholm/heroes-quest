@@ -70,7 +70,7 @@ function BattleDao() {
 					if (err) { Logger.logError("save:"+err, err.stack); callback(err, null); return; }
 					Logger.logInfo("BattleDao.save(2)");
 					Logger.logInfo(JSON.stringify(data));
-					callback(null, true);
+					callback(null, battleDTO);
 				});
 				var updateTime = new Date();
 			//});

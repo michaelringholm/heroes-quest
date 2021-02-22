@@ -83,7 +83,7 @@ module.exports = function Hero(heroDTO) {
 				//battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
 				Logger.logInfo("Mob found at location, entering battle!");
 				_this.battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);				
-				saveState(callback, (err, data) => {
+				saveState((err, data) => {
 					if (err) { Logger.logError("move(3):"+err, err.stack); callback(err, null); return; }
 					callback(null, { newLocation: targetLocation, battle: _this.battleDTO }); return;
 				});				
@@ -99,9 +99,9 @@ module.exports = function Hero(heroDTO) {
 		BattleDAO.save(_this.heroKey, _this.battleDTO, (err, saved)=> {
 			if (err) { Logger.logError("move(1):"+err, err.stack); callback(err, null); return; }
 			_this.heroDTO.isInBattle = true;
-			HeroDAO.save(_this.userGuid, _this.heroDTO, (err, saved)=> {
+			HeroDAO.save(_this.userGuid, _this.heroDTO, (err, heroDTO)=> {
 				if (err) { Logger.logError("move(4):"+err, err.stack); callback(err, null); return; }
-				callback(null, {});
+				callback(null, heroDTO);
 			});
 		});
 	};

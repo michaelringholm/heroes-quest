@@ -6,9 +6,10 @@ var BattleDAO = require('./BattleDAO.js');
 
 
 module.exports =
-	function Battle(battleDTO) {
+	function Battle(battleDTO, heroDTO) {
 		var _this = this;
 		this.battleDTO = battleDTO;
+		this.heroDTO = heroDTO;
 		this.heroKey;
 		this.userGuid;
 
@@ -193,7 +194,7 @@ module.exports =
 			Logger.logInfo("Battle.saveState()");
 			BattleDAO.save(_this.heroKey, _this.battleDTO, (err, battleDTO) => {
 				if(err) { Logger.logError(err); callback(err, null); return; }
-				HeroDAO.save(_this.userGuid, _this.battleDTO.hero, (err, heroDTO) => {
+				HeroDAO.save(_this.userGuid, _this.heroDTO, (err, heroDTO) => {
 					if(err) { Logger.logError(err); callback(err, null); return; }
 					callback(null, _this.battleDTO);
 				});

@@ -68,7 +68,7 @@ exports.handler = function(event, context, callback) {
                         new Hero(heroDTO).move(loginDTO.userGuid, heroDTO, direction, map, (err, moveResult) => {
                             if(err) { Logger.logError(err); respondError(origin, 500, "Failed to move" + err, callback); return; }
                             Logger.logInfo("Move result:" + JSON.stringify(moveResult));
-                            if (moveResult.newLocation) {
+                            if (moveResult && moveResult.newLocation) {
                                 respondOK(origin, moveResult, callback); return;
                                 //_heroDao.save(serverLogin.activeHero);
                                 //var battle = _battleCache[serverLogin.activeHero.heroId];

@@ -12,7 +12,7 @@ Logger.logInfo(process.env.accessToken);
 
 var body = {
     accessToken: process.env.accessToken,
-    direction: "east"
+    direction: "west"
 };
 
 var request = { 

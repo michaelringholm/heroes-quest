@@ -40,6 +40,7 @@ exports.handler = function(event, context, callback) {
             if(heroDTO.isInBattle) {
                 BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
                     if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed to load battle:" + err, callback); return; }
+                    Logger.logInfo("Hero already in battle!!!");
                     Logger.logInfo("battleDTO="+JSON.stringify(battleDTO));
                     loadMap(callback, origin, loginDTO.userName, heroDTO, battleDTO);
                 });
@@ -56,14 +57,14 @@ function loadMap(callback, origin, userName, hero, battleDTO) {
         if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed to load map:" + err, callback); return; }
         var map = new MidgaardMainMap();
         map.build(mapDTO);
-        var location = map.getLocation(hero.currentCoordinates);
+        //var location = map.getLocation(hero.currentCoordinates); // This is done on map move
         var data = { hero: hero, battle: battleDTO, map: map, status: 'Your active hero is now [' + hero.heroKey + ']!' };
         
         Logger.logInfo("Found the following records while checking for existing hero:");
         Logger.logInfo(JSON.stringify(hero));
         LoginDAO.setActiveHeroName(userName, hero.heroName, (err, updatedHero) => {
             if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed to set active hero:" + err, callback); return; }
-            else HttpController.respondOK(origin, data, callback);
+            HttpController.respondOK(origin, data, callback); return;
         });                   
     });
 }

@@ -54,7 +54,7 @@ function MidgaardMainMap() {
 				//var mobIndex = Math.Round(Math.random()*possibleMobKeys.length));
 				//var mob = 
 				_logger.logInfo("Monsters found!");
-				var mob = mobFactory.create();
+				mob = mobFactory.create();
 			}
 			else
 				_logger.logInfo("No monsters here!");
