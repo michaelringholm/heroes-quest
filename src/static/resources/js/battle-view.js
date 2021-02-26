@@ -144,13 +144,14 @@ function BattleView() {
         $("#battleContainer").show()
         $("#battleBottomToolbar").show();
     
-        $("#container").css("background-image", "url('./resources/images/battle-background.jpg')"); 	
-        $("#battleHeroContainer").attr("src", heroView.getHeroCardImage(battle.hero.heroClass));
-            
+        var heroCard = $("#battleContainer .hero-card .card");
+        $("#battleContainer .hero-card .card .card-img-top").attr("src", heroView.getHeroCardImage(battle.hero.heroClass));
         var imgSrc = getMobImgSrc(battle.mob);
         $("#battleMobContainer").attr("src", imgSrc);
         
-        $("#heroName").html(battle.hero.heroName);
+        heroCard.find(".heroName").html(battle.hero.heroName);
+        heroCard.find(".battleAction").html(battle.hero.currentBattleAction);
+        heroCard.find(".abilityImpact").html("(" + battle.hero.abilityImpact + ")");
         $("#mobName").html(battle.mob.name);
         if (battle.mob.name.length > 8)
             $("#mobName").css("font-size", "1rem");
@@ -162,12 +163,12 @@ function BattleView() {
             battleOver(battle);
         else {
             if(battle.round*1 > 0) {
-                setHp("#heroHP", battle.hero.hp, battle.hero.baseHp);
+                setHp("#battleContainer .hero-card .card .heroHP", battle.hero.hp, battle.hero.baseHp);
                 setHp("#mobHP", battle.mob.hp, battle.mob.baseHp);                
                 updateAbilityImpacts(battle);                
             }
             else {
-                setHp("#heroHP", battle.hero.hp, battle.hero.baseHp);
+                setHp("#battleContainer .hero-card .card .heroHP", battle.hero.hp, battle.hero.baseHp);
                 setHp("#mobHP", battle.mob.hp, battle.mob.baseHp);
             }
         }	
