@@ -104,18 +104,6 @@ function logError(msg) {
 	console.error(msg);
 }  
 
-function getMobImgSrc(mob) {
-	var imgSrc = null;
-	imgSrc = "./resources/images/mobs/" + mob.key + ".png";
-	
-	if (!imgSrc) {
-		logInfo("No image found for mob [" + mob.key + "]!");
-		return "./resources/images/mobs/wild-boar.png";
-	}
-		
-	return imgSrc;		
-}
-
 function post(apiUrl, data, fnSuccess, fnError) {	
 	//callMethod("http://" + hostIp + ":" + hostPort, controller + "/" + methodName, data, fnSuccess, fnError);
 	callMethod(apiUrl, data, fnSuccess, fnError);

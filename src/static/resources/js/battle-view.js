@@ -134,6 +134,18 @@ function BattleView() {
             logError("Winner was missing from battle!");
     };
 
+    var getMobImgSrc = function(mob) {
+        var imgSrc = null;
+        imgSrc = "./resources/images/mobs/" + mob.key + ".png";
+        
+        if (!imgSrc) {
+            logInfo("No image found for mob [" + mob.key + "]!");
+            return "./resources/images/mobs/wild-boar.png";
+        }
+            
+        return imgSrc;		
+    };
+
     var drawBattleScreen = function(battle) {
         $(".function").hide();
         $(".overlay").hide();
@@ -145,18 +157,21 @@ function BattleView() {
         $("#battleBottomToolbar").show();
     
         var heroCard = $("#battleContainer .hero-card .card");
-        $("#battleContainer .hero-card .card .card-img-top").attr("src", heroView.getHeroCardImage(battle.hero.heroClass));
+        var mobCard = $("#battleContainer .mob-card .card");
+        heroCard.find(".card-img-top").attr("src", heroView.getHeroCardImage(battle.hero.heroClass));
         var imgSrc = getMobImgSrc(battle.mob);
-        $("#battleMobContainer").attr("src", imgSrc);
+        $("#battleContainer .mob-card .card .card-img-top").attr("src", imgSrc);
         
         heroCard.find(".heroName").html(battle.hero.heroName);
         heroCard.find(".battleAction").html(battle.hero.currentBattleAction);
         heroCard.find(".abilityImpact").html("(" + battle.hero.abilityImpact + ")");
-        $("#mobName").html(battle.mob.name);
+        mobCard.find(".mobName").html(battle.mob.name);
+        mobCard.find(".battleAction").html(battle.mob.currentBattleAction);
+        mobCard.find(".abilityImpact").html("(" + battle.mob.abilityImpact + ")");
         if (battle.mob.name.length > 8)
-            $("#mobName").css("font-size", "1rem");
+            mobCard.find(".mobName").css("font-size", "1rem");
         else
-            $("#mobName").css("font-size", "1.2rem");
+            mobCard.find(".mobName").css("font-size", "1.2rem");
             
                         
         if (battle.status.over)
@@ -164,12 +179,12 @@ function BattleView() {
         else {
             if(battle.round*1 > 0) {
                 setHp("#battleContainer .hero-card .card .heroHP", battle.hero.hp, battle.hero.baseHp);
-                setHp("#mobHP", battle.mob.hp, battle.mob.baseHp);                
+                setHp("#battleContainer .mob-card .card .mobHP", battle.mob.hp, battle.mob.baseHp);                
                 updateAbilityImpacts(battle);                
             }
             else {
                 setHp("#battleContainer .hero-card .card .heroHP", battle.hero.hp, battle.hero.baseHp);
-                setHp("#mobHP", battle.mob.hp, battle.mob.baseHp);
+                setHp("#battleContainer .mob-card .card .mobHP", battle.mob.hp, battle.mob.baseHp);
             }
         }	
     };
