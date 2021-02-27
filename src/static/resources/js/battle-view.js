@@ -162,7 +162,7 @@ function BattleView() {
     
         var heroCard = $("#battleContainer .hero-card .card");
         var mobCard = $("#battleContainer .mob-card .card");
-        heroCard.find(".card-img-top").attr("src", heroView.getHeroCardImage(battle.hero.heroClass));
+        heroCard.find(".card-img-top").attr("src", heroView.getHeroCardImage(battle.hero));
         var imgSrc = getMobImgSrc(battle.mob);
         $("#battleContainer .mob-card .card .card-img-top").attr("src", imgSrc);
         

@@ -3,6 +3,7 @@ var appContext = require('../common/AppContext.js');
 var FV = require('../common/field-verifier.js');
 var HeroDTO = require('./HeroDTO.js');
 var AWS = require("aws-sdk");
+var CONSTS = require('../common/Constants.js');
 
 function HeroDAO() {
 	var _this = this;
@@ -40,8 +41,8 @@ function HeroDAO() {
 			Item: {
 			  'userGuid': {S: userGuid},
 			  'heroName': {S: heroDTO.heroName},
-			  'heroClass': {S: heroDTO.heroClass}
-			  //'isInBattle': {BOOL: heroDTO.isInBattle}
+			  'heroClass': {S: heroDTO.heroClass},
+			  'gender': {S: heroDTO.gender}
 			},
 			ReturnConsumedCapacity: "TOTAL", 
 			//ProjectionExpression: 'ATTRIBUTE_NAME'
@@ -117,13 +118,21 @@ function HeroDAO() {
 				callback(null, heroDTO);
 			});		
 		});
-	};	
+	};
+
+	var patchHero = function(heroDTO) {
+		Logger.logInfo("HeroDAO.patchHero");
+		if(!heroDTO.gender) { Logger.logInfo("Patching gender..."); heroDTO.gender = CONSTS.GENDERS.FEMALE; }
+		return heroDTO;
+	};
 	
 	this.saveDetails = function(heroKey, heroDTO, callback) {
 		Logger.logInfo("HeroDAO.save");
 		if(!callback) { Logger.logWarn("HeroDAO.save called with undefined callback!"); return; }
 		if(heroDTO) {
 			var fileName = "hero-" + heroKey + ".json";
+			patchHero(heroDTO);			
+			Logger.logInfo("Hero after patching=["+JSON.stringify(heroDTO)+"]");
 			this.exists(fileName, (err, exists)=> {
 				if (err) { Logger.logError("load:"+err, err.stack); callback(err, false); return; }
 				//if (!exists) { callback("Hero details file [" + fileName + "] does not exist!", null); return; }
@@ -143,7 +152,7 @@ function HeroDAO() {
 			});
 		}
 		else
-			Logger.error("Skipping save of battles as the battles hashmap in invalid!");
+			Logger.error("hero was null, not saving!");
 	};
 
 	/*this.updateBattleStatus = function(userGuid, heroName, isInBattle, callback) {

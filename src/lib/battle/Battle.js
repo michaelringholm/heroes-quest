@@ -32,8 +32,8 @@ module.exports =
 			}
 			
 			_this.battleDTO.round++;
-			_this.battleDTO.hero.hp += 500; // TEMP HACK
-			_this.battleDTO.mob.hp += 500; // TEMP HACK			
+			//_this.battleDTO.hero.hp += 500; // TEMP HACK
+			//_this.battleDTO.mob.hp += 500; // TEMP HACK			
 			var roundInfo = getRoundInfo();
 			Logger.logInfo("*****ROUND INFO*******\n"+roundInfo);
 			var firstUp = getFirstUp(_this.battleDTO.hero, _this.battleDTO.mob);
@@ -42,7 +42,7 @@ module.exports =
 			attack(firstUp, secondUp);
 
 			if (secondUp.hp <= 0) {
-				_this.battleEnded(firstUp, secondUp, (err, heroDTO) => {
+				battleEnded(firstUp, secondUp, (err, heroDTO) => {
 					if(err) { Logger.logError(err); callback(err, null); return; }
 					saveState(callback); return;
 				});

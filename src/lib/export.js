@@ -17,6 +17,7 @@ const HeroDTO = require('./hero/HeroDTO.js');
 const HeroDAO = require('./hero/HeroDAO.js');
 const LoginDTO = require('./login/LoginDTO.js');
 const LoginDAO = require('./login/LoginDAO.js');
+const CONSTS = require('./common/Constants.js');
 
 module.exports.AppContext = AppContext;
 module.exports.FieldVerifier = FieldVerifier;
@@ -34,5 +35,6 @@ module.exports.BattleDAO = BattleDAO;
 module.exports.Hero = Hero;
 module.exports.HeroDAO = HeroDAO;
 module.exports.HeroDTO = HeroDTO;
+module.exports.CONSTS = CONSTS;
 module.exports.LoginDAO = LoginDAO;
 module.exports.LoginDTO = LoginDTO;

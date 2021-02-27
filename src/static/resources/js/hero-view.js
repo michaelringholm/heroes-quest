@@ -21,14 +21,25 @@ function HeroView() {
             post(_this.CHOOSE_HERO_URL, data, this.chooseHeroSuccess, this.chooseHeroFailed);
         }	
     };
-
-    this.getHeroCardImage = function(heroClass) {
+    
+    this.getHeroCardImage = function(hero) {
         var imgSrc = "";
-        switch(heroClass) {
-            case _this.HeroClassEnum.PRIEST : imgSrc = "./resources/images/characters/card-priest-male.png"; break;
-            case _this.HeroClassEnum.WARRIOR : imgSrc = $("#warriorHeroImg").attr("src"); break;
-            case _this.HeroClassEnum.ROGUE : imgSrc = $("#rogueHeroImg").attr("src"); break;
-            default : imgSrc = $("#warriorHeroImg").attr("src");
+        if(hero.gender == "female") {
+            switch(hero.heroClass) {
+                case _this.HeroClassEnum.PRIEST : imgSrc = "./resources/images/characters/female-priest.jpg"; break;
+                case _this.HeroClassEnum.WARRIOR : imgSrc ="./resources/images/characters/female-warrior.jpg"; break;
+                case _this.HeroClassEnum.ROGUE : imgSrc = "./resources/images/characters/female-thief.jpg"; break;
+                case _this.HeroClassEnum.RANGER : imgSrc = "./resources/images/characters/female-ranger.jpg"; break;
+                default : imgSrc = "./resources/images/characters/card-priest-female.png";
+            }
+        }
+        else {
+            switch(hero.heroClass) {
+                case _this.HeroClassEnum.PRIEST : imgSrc = "./resources/images/characters/card-priest-male.png"; break;
+                case _this.HeroClassEnum.WARRIOR : imgSrc = "./resources/images/characters/card-warrior-male.png"; break;
+                case _this.HeroClassEnum.ROGUE : imgSrc = "./resources/images/characters/female-thief.jpg"; break;
+                default : imgSrc = "./resources/images/characters/card-priest-male.png";
+            }
         }
         return imgSrc;
     };    

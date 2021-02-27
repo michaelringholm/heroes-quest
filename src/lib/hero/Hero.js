@@ -190,6 +190,7 @@ module.exports = function Hero(heroDTO) {
 		}
 		
 		_this.heroDTO.hp = 1;
+		_this.heroDTO.conditions = [];
 		_this.heroDTO.mana = _this.heroDTO.baseMana;
 		MapCache.getMap(_this.heroDTO.currentMapKey, (err, mapDTO) => {
 			var baseTown = new MidgaardMainMap().build(mapDTO).getBaseTown();

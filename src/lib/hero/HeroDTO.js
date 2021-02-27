@@ -4,8 +4,9 @@ var Coordinate = require('../map/Coordinate.js');
 var _mapDao = require('../map/MapDAO.js');
 var _battleDao = require('../battle/BattleDAO.js');
 var _itemFactory = require('../item/ItemFactory.js');
+var CONSTS = require('../common/Constants.js');
 
-module.exports = function Hero(anonObj) {
+module.exports = function Hero(anonObj) {	
 	var _this = this;
 	this.heroName = "";
 	this.heroId = "";
@@ -34,6 +35,7 @@ module.exports = function Hero(anonObj) {
 	this.currentMapKey = "midgaard-main";
 	this.currentCoordinates = {x:0, y:0};
 	this.rested = false;
+	this.gender = CONSTS.GENDERS.FEMALE;
 			
 	this.construct = function() {
 		_logger.logInfo("HeroDTO.construct");

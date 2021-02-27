@@ -54,7 +54,7 @@ function LoginView() {
         newHeroCard.removeClass("template");
         $(newHeroCard).find(".hero-name").html(hero.heroName);
         $(newHeroCard).find(".hero-text").html(hero.heroClass);
-        $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero.heroClass));
+        $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero));
         $(newHeroCard).find(".card").attr("data-hero-name", hero.heroName);
         return newHeroCard;
     };
