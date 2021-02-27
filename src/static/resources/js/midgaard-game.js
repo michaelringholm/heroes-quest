@@ -51,7 +51,13 @@ function GameSession() {
 
 	this.setUserName = function(userName) {
 		$("#userName").val(userName);
-	}	
+	}
+	this.disableToolbarCommands = function() {
+		$(".toolbar .commandButton").removeClass("active");
+	}
+	this.enableToolbarCommands = function() {
+		$(".toolbar .commandButton.unlocked").addClass("active");
+	}
 }
 var gameSession = new GameSession();
 

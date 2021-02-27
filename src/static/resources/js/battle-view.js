@@ -20,7 +20,9 @@ function BattleView() {
     };*/
     
     this.nextRound  = function(commandButton) {        
-        $("#battleButtonBar").hide();
+        //$("#battleButtonBar").hide();
+        if(!$(commandButton).hasClass("active")) return;
+        gameSession.disableToolbarCommands();
         gameSession.ability = null;
         var ability = $(commandButton).attr("data-ability");
         if(ability) {
@@ -46,10 +48,12 @@ function BattleView() {
                 mapView.drawMap(response.data);
             }
         }
+        gameSession.enableToolbarCommands();
     };
     
     var nextRoundFailed = function(errorMsg) {
         logInfo(errorMsg);
+        gameSession.enableToolbarCommands();
     };
 
     this.startOrResumeBattle = function(battle) {
@@ -164,10 +168,10 @@ function BattleView() {
         
         heroCard.find(".heroName").html(battle.hero.heroName);
         heroCard.find(".battleAction").html(battle.hero.currentBattleAction);
-        heroCard.find(".abilityImpact").html("(" + battle.hero.abilityImpact + ")");
+        heroCard.find(".abilityImpact").html("Impact=(" + battle.hero.abilityImpact + ")");
         mobCard.find(".mobName").html(battle.mob.name);
         mobCard.find(".battleAction").html(battle.mob.currentBattleAction);
-        mobCard.find(".abilityImpact").html("(" + battle.mob.abilityImpact + ")");
+        mobCard.find(".abilityImpact").html("Impact=(" + battle.mob.abilityImpact + ")");
         if (battle.mob.name.length > 8)
             mobCard.find(".mobName").css("font-size", "1rem");
         else

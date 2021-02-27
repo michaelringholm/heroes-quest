@@ -88,9 +88,8 @@ module.exports =
 		}
 
 		var attack = function (attacker, defender) {
-			Logger.logInfo("Battle.attack");
-
-			var fnBattleAction = getBattleAction(attacker.currentBattleAction);
+			Logger.logInfo("Battle.attack");			
+			var fnBattleAction = getBattleAction(attacker.currentBattleAction);			
 			fnBattleAction(attacker, defender);			
 		};
 
@@ -124,8 +123,11 @@ module.exports =
 		};
 
 		var poisonI = function (attacker, defender) {
-			var poisonDmg = Math.round(attacker.level + (Math.random() * (attacker.level + 6)));
-			if (poisonDmg < 0) poisonDmg = 0;
+			var rand = Math.random();
+			if(!attacker.level) attacker.level = 1; // TEMP FIX
+			var poisonDmg = Math.round(attacker.level + (rand * (attacker.level + 6)));
+			if(!poisonDmg) Logger.logError("Poison damage is somehow null, rand=["+rand+"] attacker=["+JSON.stringify(attacker)+"]");
+			if(!poisonDmg || poisonDmg < 0) poisonDmg = 0;			
 			defender.hp -= poisonDmg;
 			attacker.abilityImpact = poisonDmg;			
 			defender.conditions.push("poisonI");

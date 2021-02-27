@@ -32,9 +32,10 @@ exports.handler = function(event, context, callback) {
             BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
                 if(err) { Logger.logError(err, err.stack); HttpController.respondError(origin, 500, "failed to get battle:" + err, callback); return; }                
                 new Battle(battleDTO, heroDTO).nextRound(loginDTO.userGuid, heroDTO.heroKey, requestInput.battleAction, (err, battleDTO) => {
+                    if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(3):" + err, callback); return; }
                     HttpController.respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
                     return;
-                });                
+                });
             });
         });
     });
