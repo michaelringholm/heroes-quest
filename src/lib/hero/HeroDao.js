@@ -58,8 +58,9 @@ function HeroDAO() {
 		Logger.logInfo("HeroDao.saveAsync()");
 		if(!userGuid) { Logger.logError("Missing field [userGuid]."); throw new Error("Missing field [userGuid].", null); }
 		var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName","heroClass"]); if(missingFields.length > 0) { throw new Error("Missing fields:" + JSON.stringify(missingFields)); }
-		var newHeroData = saveToDBAsync(userGuid, heroDTO);
-		saveDetailsAsync(heroKey, heroDTO);
+		var newHeroData = await saveToDBAsync(userGuid, heroDTO);
+		var heroKey = userGuid+"#"+heroDTO.heroName;
+		await saveDetailsAsync(heroKey, heroDTO);
 		Logger.logInfo("Hero created");
 		Logger.logInfo("newHeroData JSON [" + JSON.stringify(newHeroData) + "] created!");
 		var newHeroItem = AWS.DynamoDB.Converter.unmarshall(newHeroData); // Seems only new fields are in Dynamo format
@@ -195,8 +196,8 @@ function HeroDAO() {
 
 	this.getAsync = async function(userGuid, heroName) {
 		Logger.logInfo("HeroDao.getAsync()");
-		if(!userGuid) { Logger.logError("Missing field [userGuid]."); callback("Missing field [userGuid].", null); return; }
-		if(!heroName) { Logger.logError("Missing field [heroName]."); callback("Missing field [heroName].", null); return; }
+		if(!userGuid) { Logger.logError("Missing field [userGuid]."); throw new Error("Missing field [userGuid]."); }
+		if(!heroName) { Logger.logError("Missing field [heroName]."); throw new Error("Missing field [heroName]."); }
 		var heroKey = userGuid+"#"+heroName;
 		//var heroItem = await _this.getFromDBAsync(userGuid, heroName);
 		var heroDTO = await _this.loadDetailsAsync(heroKey);
@@ -267,7 +268,7 @@ function HeroDAO() {
 			return new Promise((resolve, reject) => {
 				_this.s3.putObject(params, function(err, data) {
 					if (err) { Logger.logError("save:"+err, err.stack); reject(err); return; }
-					Logger.logInfo(data);
+					//Logger.logInfo(data);
 					resolve(true);
 				});
 			});

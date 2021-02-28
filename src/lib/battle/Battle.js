@@ -66,6 +66,41 @@ module.exports =
 			//Logger.logInfo(JSON.stringify(_this.battleDTO.mob));
 		};
 
+		this.nextRoundAsync = async function (userGuid, heroKey, heroBattleAction) {
+			Logger.logInfo("Battle.nextRoundAsync");
+			_this.heroKey = heroKey;
+			_this.userGuid = userGuid;
+			if(!_this.battleDTO.hero.conditions) _this.battleDTO.hero.conditions = new Array();
+			if(!_this.battleDTO.mob.conditions) _this.battleDTO.mob.conditions = new Array();
+			_this.battleDTO.hero.currentBattleAction = heroBattleAction;
+			predictMobBattleAction();
+
+			if (_this.battleDTO.status.over) {
+				Logger.logInfo("battle is over!");
+				_this.heroDTO.isInBattle = false;
+				await saveStateAsync(); 
+				return _this.battleDTO;
+			}
+			
+			_this.battleDTO.round++;
+			//_this.battleDTO.hero.hp += 500; // TEMP HACK
+			//_this.battleDTO.mob.hp += 500; // TEMP HACK			
+			var roundInfo = getRoundInfo();
+			Logger.logInfo("*****ROUND INFO*******\n"+roundInfo);
+			var firstUp = getFirstUp(_this.battleDTO.hero, _this.battleDTO.mob);
+			var secondUp = getSecondUp(_this.battleDTO.hero, _this.battleDTO.mob);
+
+			attack(firstUp, secondUp);
+			if (secondUp.hp <= 0) await battleEndedAsync(firstUp, secondUp);
+			else {
+				attack(secondUp, firstUp);
+				if (firstUp.hp <= 0) await battleEndedAsync(secondUp, firstUp);
+				else regen();
+			}
+			await saveStateAsync(); 
+			return _this.battleDTO;
+		};		
+
 		var getRoundInfo = function() {
 			var roundInfo = "Round:" +  _this.battleDTO.round + "\n";
 			roundInfo += "Hero HP:" + _this.battleDTO.hero.hp + "\n";
@@ -143,8 +178,9 @@ module.exports =
 			return playerX;
 		};
 
-		var battleEnded = function (winner, loser, callback) {			
+		var battleEndedAsync = async function (winner, loser) {			
 			_this.battleDTO.status.over = true;
+			_this.heroDTO.isInBattle = false;
 
 			if (winner.heroId == _this.battleDTO.hero.heroId) {
 				_this.battleDTO.status.winner = winner.heroName;
@@ -156,10 +192,7 @@ module.exports =
 				_this.battleDTO.status.winner = winner.name;
 				_this.battleDTO.status.loser = loser.heroName;
 				Logger.logInfo(winner.name + " won! and " + loser.heroName + " lost!");
-				heroLost((err, heroDTO) => {
-					if(err) { Logger.logError(err); callback(err, null); return; }
-					callback(null, heroDTO);
-				});
+				heroLostAsync(heroDTO);
 			}			
 		};
 
@@ -182,6 +215,12 @@ module.exports =
 			});
 		};
 
+		var heroLostAsync = async function () {
+			Logger.logInfo("hero lost the battle!");
+			var heroDTO = await new Hero(_this.battleDTO.hero).diedAsync(_this.battleDTO.mob);
+			return heroDTO;
+		};		
+
 		var regen = function () {
 			_this.battleDTO.hero.hp += _this.battleDTO.hero.regen;
 			_this.battleDTO.mob.hp += _this.battleDTO.mob.regen;
@@ -202,6 +241,13 @@ module.exports =
 				});
 			});	
 		};
+
+		var saveStateAsync = async function() {
+			Logger.logInfo("Battle.saveStateAsync()");
+			var battleDTO = await BattleDAO.saveAsync(_this.heroKey, _this.battleDTO);
+			var heroDTO = await HeroDAO.saveAsync(_this.userGuid, _this.heroDTO);
+			return _this.battleDTO;
+		};		
 
 		this.drawB = function () {
 			_this.drawP(_this.battleDTO.hero);

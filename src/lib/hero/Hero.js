@@ -59,21 +59,15 @@ module.exports = function Hero(heroDTO) {
 	};
 
 	this.moveAsync = async function(userGuid, heroDTO, direction, map)  {
-		Logger.logInfo("Hero.moveAsync");
+		Logger.logInfo("Hero.moveAsync()");
 		var targetCoordinates = new Coordinate(_this.heroDTO.currentCoordinates);
-		if(direction == "west")
-			targetCoordinates.x--;
-		else if(direction == "east")
-			targetCoordinates.x++;
-		else if(direction == "north")
-			targetCoordinates.y--;		
-		else if(direction == "south")
-			targetCoordinates.y++;
-		
+		if(direction == "west") targetCoordinates.x--;
+		else if(direction == "east") targetCoordinates.x++;
+		else if(direction == "north") targetCoordinates.y--;		
+		else if(direction == "south") targetCoordinates.y++;
 		_this.heroKey = _this.getHeroKey(userGuid, heroDTO.heroName);
 		_this.userGuid = userGuid;
 		Logger.logInfo("targetCoordinates=[" + JSON.stringify(targetCoordinates) + "]");
-		
 		var targetLocation = map.getLocation(targetCoordinates);
 		
 		if(targetLocation) {
@@ -82,7 +76,7 @@ module.exports = function Hero(heroDTO) {
 				//battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
 				Logger.logInfo("Mob found at location, entering battle!");
 				_this.battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);				
-				saveStateAsync();
+				await saveStateAsync();
 				return { newLocation: targetLocation, battle: _this.battleDTO }
 			}
 			else return { newLocation: targetLocation, battle: null };
@@ -128,10 +122,10 @@ module.exports = function Hero(heroDTO) {
 	};
 
 	var saveStateAsync = async function() {
-		Logger.logInfo("Hero.saveStateAsync");
-		var savedObj = BattleDAO.saveAsync(_this.heroKey, _this.battleDTO);
+		Logger.logInfo("Hero.saveStateAsync()");
+		var savedObj = await BattleDAO.saveAsync(_this.heroKey, _this.battleDTO);
 		_this.heroDTO.isInBattle = true;
-		var heroDTO = HeroDAO.saveAsync(_this.userGuid, _this.heroDTO);
+		var heroDTO = await HeroDAO.saveAsync(_this.userGuid, _this.heroDTO);
 		return heroDTO;
 	};	
 
@@ -164,6 +158,17 @@ module.exports = function Hero(heroDTO) {
 		}
 	};
 
+	this.enterTownAsync = async function(loginDTO, heroDTO) {
+		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't enter town"); throw new Error("Hero is in battle, can't enter town"); }
+		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
+		var mapDTO = await MapCache.getMapAsync(heroDTO.currentMapKey);
+		var map = new MidgaardMainMap();
+		map.build(mapDTO);
+		var location = map.getLocation(heroDTO.currentCoordinates);
+		var data = { hero: heroDTO, map: map, location: location };
+		return data;
+	};
+
 	this.enterTown = function(loginDTO, heroDTO, callback) {
 		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't enter town"); callback("Hero is in battle, can't enter town", null); return; }
 		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
@@ -175,7 +180,7 @@ module.exports = function Hero(heroDTO) {
 			var data = { hero: heroDTO, map: map, location: location };
 			callback(null, data);
 		});
-	};
+	};	
 
 	this.leaveTown = function(loginDTO, heroDTO, callback) {
 		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't leave town"); callback("Hero is in battle, can't leave town", null); return; }
@@ -240,6 +245,23 @@ module.exports = function Hero(heroDTO) {
 			callback(null, _this.heroDTO);
 		})
 	};
+
+	this.diedAsync = async function(mob) {
+		_this.heroDTO.xp -= (mob.xp*10);
+		
+		if (_this.heroDTO.sta > 1) {
+			_this.heroDTO.sta -= 1;
+		}
+		
+		_this.heroDTO.hp = 1;
+		_this.heroDTO.conditions = [];
+		_this.heroDTO.mana = _this.heroDTO.baseMana;
+		var mapDTO = await MapCache.getMapAsync(_this.heroDTO.currentMapKey);
+		var baseTown = new MidgaardMainMap().build(mapDTO).getBaseTown();
+		_this.heroDTO.currentCoordinates.x = baseTown.x;
+		_this.heroDTO.currentCoordinates.y = baseTown.y;
+		return _this.heroDTO;
+	};	
 	
 	this.construct = function() {
 		Logger.logInfo("Hero.construct");

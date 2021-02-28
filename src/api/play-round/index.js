@@ -8,36 +8,26 @@ var { BattleDAO } = require("om-hq-lib");
 var { HttpController } = require("om-hq-lib");
 
 // Callback is (error, response)
-exports.handler = function(event, context, callback) {
+exports.handler = async function(event, context, callback) {
     Logger.logInfo(JSON.stringify(event));
     if(AWS.config.region == null) AWS.config.update({region: 'eu-north-1'});
     var method = event.requestContext.http.method;
     var origin = event.headers.origin;
     var referer = event.headers.referer;
-    if(method == "OPTIONS") {
-        HttpController.preFlightResponse(origin, referer, callback);
-        return;
-    }
     Logger.logInfo("method="+method);
-    //var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});HttpController
+    if(method == "OPTIONS") { HttpController.preFlightResponse(origin, referer, callback); return; }
     var requestInput = JSON.parse(event.body);
-    if(!requestInput.accessToken) { Logger.logError("Access token missing!"); HttpController.respondError(origin, 500, "Access token missing!", callback); return; }
-    if(!requestInput.battleAction) { Logger.logError("Battle action missing!"); HttpController.respondError(origin, 500, "Battle action missing!", callback); return; }
-    
-    LoginDAO.getByToken(requestInput.accessToken, (err, loginDTO) => {
-        if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(1):" + err, callback); return; }
-        HeroDAO.get(loginDTO.userGuid, loginDTO.activeHeroName, (err, heroDTO) => {
-            if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(2):" + err, callback); return; }
-            heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
-            BattleDAO.load(heroDTO.heroKey, (err, battleDTO) => {
-                if(err) { Logger.logError(err, err.stack); HttpController.respondError(origin, 500, "failed to get battle:" + err, callback); return; }                
-                new Battle(battleDTO, heroDTO).nextRound(loginDTO.userGuid, heroDTO.heroKey, requestInput.battleAction, (err, battleDTO) => {
-                    if(err) { Logger.logError(err); HttpController.respondError(origin, 500, "Failed: map move(3):" + err, callback); return; }
-                    HttpController.respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
-                    return;
-                });
-            });
-        });
-    });
+    try {
+        if(!requestInput.accessToken) throw new Error("Access token missing!");
+        if(!requestInput.battleAction) throw new Error("Battle action missing!");
+        var loginDTO = await LoginDAO.getByTokenAsync(requestInput.accessToken);
+        var heroDTO = await HeroDAO.getAsync(loginDTO.userGuid, loginDTO.activeHeroName);
+        heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
+        var battleDTO = await BattleDAO.loadAsync(heroDTO.heroKey);        
+        battleDTO = await new Battle(battleDTO, heroDTO).nextRoundAsync(loginDTO.userGuid, heroDTO.heroKey, requestInput.battleAction);
+        Logger.logInfo("***battleDTO="+JSON.stringify(battleDTO));
+        HttpController.respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
+    }
+    catch(ex) { Logger.logError(ex.stack); HttpController.respondError(origin, 500, ex.toString(), callback); return }    
 };
 

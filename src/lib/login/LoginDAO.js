@@ -63,9 +63,9 @@ function LoginDAO() {
 		});
 	};
 
-	this.getByTokenAsync = async function(token, callback) {
+	this.getByTokenAsync = async function(token) {
 		logger.logInfo("LoginDAO.getByToken()...");
-		if(!token) { logger.logError("Missing field [token]."); callback("Missing field [token].", null); return; }
+		if(!token) { logger.logError("Missing field [token]."); throw new Error("Missing field [token]."); }
 		var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
 
 		var params = {
@@ -76,12 +76,9 @@ function LoginDAO() {
 		  //ProjectionExpression: "Season, Episode, Title, Subtitle",
 		  TableName: appContext.LOGIN_TABLE_NAME,
 		};
-		
-		//var loginItems = ddb.scan(params).;
-		//console.log("**** loginItems=" + JSON.stringify(loginItems));
 		return new Promise((resolve, reject) => {
 			ddb.scan(params, function (err, loginItems) {
-				if(err) reject(err);
+				if(err) { reject(err); return; }
 				logger.logInfo("loginItems=" + JSON.stringify(loginItems));
 				if(loginItems.Items.length == 0) throw new Error("The access token was not found!");
 				if(loginItems.Items.length > 1) throw new Error("Multiple access keys found, something is very wrong!");

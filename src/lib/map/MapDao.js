@@ -118,10 +118,8 @@ function MapDAO() {
 	this.loadDefinitionAsync = async function(mapName) {
 		Logger.logInfo("MapDao.loadDefinitionAsync");
 		var fileName = mapName + '.map.definition';
-		
-		var exists = this.existsAsync(fileName);
-		if (!exists) { Logger.logError("Map file [" + fileName + "] does not exist!"); throw new Error("Map file [" + fileName + "] does not exist!", null); }
-		
+		var exists = await this.existsAsync(fileName);
+		if (!exists) throw new Error("Map file [" + fileName + "] does not exist!");
 		var params = {
 			Bucket: bucketName, 
 			Key: fileName
@@ -131,7 +129,7 @@ function MapDAO() {
 				if (err) { Logger.logError("load:"+err, err.stack); reject(err); return; }
 				Logger.logInfo("Map definition for [" + mapName + "] loaded!");
 				Logger.logInfo("Map definition JSON is [" + mapDefinition.Body.toString() + "]!");
-				resolve(null, mapDefinition.Body.toString());
+				resolve(mapDefinition.Body.toString());
 			});		
 		});
 	};	

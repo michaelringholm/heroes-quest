@@ -55,7 +55,7 @@ function BattleDao() {
 	this.loadAsync = async function(heroKey) {
 		Logger.logInfo("BattleDao.load");
 		var fileName = "battle-" + heroKey + ".json";
-		var exists = this.existsAsync(fileName);
+		var exists = await this.existsAsync(fileName);
 		if (!exists) { Logger.logError("Battle file [" + fileName + "] does not exist!"); throw new Error("Battle file [" + fileName + "] does not exist!"); }
 		var params = {
 			Bucket: bucketName, 
@@ -95,7 +95,6 @@ function BattleDao() {
 	
 	this.saveAsync = async function(heroKey, battleDTO) {
 		Logger.logInfo("BattleDao.saveAsync");
-		if(!callback) { Logger.logWarn("BattleDao.save called with undefined callback!"); Logger.logWarn(new Error().stack); return; }
 		if(battleDTO) {
 			var fileName = "battle-" + heroKey + ".json";
 			var params = {

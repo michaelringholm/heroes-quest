@@ -42,6 +42,7 @@ function MidgaardMainMap() {
 	
 	this.getLocation = function(targetCoordinates) {
 		// Should figure out what is there
+		if(!_this.mapDefinition) throw new Error("MapDefinition not loaded correctly!");
 		if( (targetCoordinates.x >= 0 && targetCoordinates.x <= 18) && (targetCoordinates.y >= 0 && targetCoordinates.y <= 6)  ) {
 			var possibleMobKeys = ["rat", "beetle", "spider"];
 			var mobProbability = 0.5;
@@ -56,12 +57,10 @@ function MidgaardMainMap() {
 				_logger.logInfo("Monsters found!");
 				mob = mobFactory.create();
 			}
-			else
-				_logger.logInfo("No monsters here!");
+			else _logger.logInfo("No monsters here!");
 			
 			//_logger.logInfo("The raw map looks like this = [" + _this.rawMap + "]");
 			var terrainChar = _this.mapMatrix[targetCoordinates.y][targetCoordinates.x];
-			
 			if(terrainChar) {
 				var terrainType = getTerrainType(terrainChar);
 			
@@ -84,7 +83,7 @@ function MidgaardMainMap() {
 	};
 	
 	this.build = function(mapDTO) {
-		_logger.logInfo("MidgaardMainMap.construct");
+		_logger.logInfo("MidgaardMainMap.build()");
 		_logger.logInfo("mapDTO="+ JSON.stringify(mapDTO));
 		//var mob = mobFactory.create();
 		_this.mapMatrix = mapDTO.rawMap.match(/[^\r\n]+/g);

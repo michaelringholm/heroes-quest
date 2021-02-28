@@ -26,10 +26,10 @@ function TownView() {
 
     this.enterTown = function() {
         gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
-        post(_this.ENTER_TOWN_URL, gameSession, _this.enterTownSuccess, _this.enterTownFailed);
+        post(_this.ENTER_TOWN_URL, gameSession, enterTownSuccess, enterTownFailed);
     };
 
-    this.enterTownSuccess = function(response) {
+    var enterTownSuccess = function(response) {
         logInfo("enter town OK!");
         logInfo(JSON.stringify(data));        
         
@@ -44,7 +44,7 @@ function TownView() {
             logInfo("There is no town at this location, continuing on map!");
     };
 
-    this.enterTownFailed = function(errorMsg) {
+    var enterTownFailed = function(errorMsg) {
         logInfo(errorMsg);
     };
     

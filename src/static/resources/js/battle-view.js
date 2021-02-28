@@ -1,11 +1,8 @@
 var battleView = {};
 $(function() {	
     battleView = new BattleView();
-    //$("#btnNextRound").click(function() {battleView.nextRound();});
     $("#battleBottomToolbar .commandButton.active").click(function(e) {battleView.nextRound(e.currentTarget);});
-	//$("#btnExitDeathScreen").click(function() {townView.enterTown();});		
-	$("#btnExitDeathScreen").click(function() {battleView.nextRound();});
-	$("#btnExitTreasureScreen").click(function() {battleView.nextRound();});
+    $("#btnExitDeathScreen").click(function() {townView.enterTown();});
 });
 
 function BattleView() {
@@ -155,8 +152,7 @@ function BattleView() {
         $(".overlay").hide();
         $(canvasLayer1).hide();
         $(canvasLayer2).hide();
-        $("#battleButtonBar").hide();
-        
+        $("#battleButtonBar").hide();        
         $("#battleContainer").show()
         $("#battleBottomToolbar").show();
     
@@ -194,7 +190,10 @@ function BattleView() {
     };
 
     this.drawTreasureScreen = function(battle) {
-        logInfo("showing treasure screen!");
+        logInfo("showing treasure screen!");        
+        $("#btnExitTreasureScreen").click(function() {townView.enterTown(battle);});
+
+
         $(".function").hide();
         $(".overlay").hide();
         $(canvasLayer2).hide();
@@ -250,7 +249,7 @@ function BattleView() {
     };
     
     this.drawDeathScreen = function(hero) {
-        logInfo("showing death screen!");	
+        logInfo("showing death screen!");	        
         $(".function").hide();
         $(".overlay").hide();
         $(canvasLayer2).hide();
