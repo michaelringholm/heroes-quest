@@ -24,6 +24,8 @@ function MobFactory() {
 		if(randomIndex == 6) randomMob = {key: "wolf", name: "Wolf", level:1, baseHp:19, hp:19, minAtk:1, maxAtk:4, ac:1,  regen:0, luck:2, atkTypes:["melee"], xp:8, copper:5, items:[item]};		
 		if(randomIndex == 7) randomMob = {key: "deer", name: "Deer", level:1, baseHp:12, hp:12, minAtk:1, maxAtk:3, ac:2,  regen:0, luck:4, atkTypes:["melee"], xp:5, copper:0, items:[item]};		
 		if(randomIndex == 8) randomMob = {key: "shadow", name: "Shadow", level:1, baseHp:28, hp:28, minAtk:3, maxAtk:5, ac:4,  regen:0, luck:2, atkTypes:["melee"], xp:160, copper:85, items:[item]};
+		if(randomIndex == 9) randomMob = {key: "small-bear", name: "Small Bear", level:1, baseHp:30, hp:30, minAtk:2, maxAtk:6, ac:3,  regen:0, luck:2, atkTypes:["melee"], xp:40, copper:5, items:[item]};		
+		if(randomIndex == 10) randomMob = {key: "rabbit", name: "Rabbit", level:1, baseHp:10, hp:10, minAtk:1, maxAtk:2, ac:1,  regen:0, luck:2, atkTypes:["melee"], xp:3, copper:5, items:[item]};		
 		
 		if(randomMob)
 			_logger.logInfo(JSON.stringify(randomMob));

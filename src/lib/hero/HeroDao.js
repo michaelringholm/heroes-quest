@@ -32,6 +32,69 @@ function HeroDAO() {
 		);
 	};
 
+	this.existsAsync = async function(fileName) {
+		Logger.logInfo("HeroDAO.exists");
+		return new Promise((resolve, reject) => {
+			_this.s3.listObjectsV2(
+				{
+					Bucket: bucketName,
+					Prefix: fileName
+				}, 
+				(err, s3Objects) => 
+				{
+					if (err) { Logger.logError("exists:"+err, err.stack); reject(err); }
+					Logger.logInfo("Objects in bucket are [" + JSON.stringify(s3Objects) + "]");
+					if(s3Objects.KeyCount<1) { resolve(false); return; }
+					for(var i=0; i<s3Objects.Contents.length;i++) {					
+						if(s3Objects.Contents[i].Key == fileName) resolve(true);
+					}
+					resolve(s3Objects.KeyCount==1);
+				}
+			);
+		});
+	};
+
+	this.saveAsync = async function(userGuid, heroDTO) {
+		Logger.logInfo("HeroDao.saveAsync()");
+		if(!userGuid) { Logger.logError("Missing field [userGuid]."); throw new Error("Missing field [userGuid].", null); }
+		var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName","heroClass"]); if(missingFields.length > 0) { throw new Error("Missing fields:" + JSON.stringify(missingFields)); }
+		var newHeroData = saveToDBAsync(userGuid, heroDTO);
+		saveDetailsAsync(heroKey, heroDTO);
+		Logger.logInfo("Hero created");
+		Logger.logInfo("newHeroData JSON [" + JSON.stringify(newHeroData) + "] created!");
+		var newHeroItem = AWS.DynamoDB.Converter.unmarshall(newHeroData); // Seems only new fields are in Dynamo format
+		var heroDTO = new HeroDTO(newHeroItem);
+		return heroDTO;
+	}	
+	
+	var saveToDBAsync = async function(userGuid, heroDTO) {
+		Logger.logInfo("HeroDao.saveToDBAsync()");
+		if(!userGuid) { Logger.logError("Missing field [userGuid]."); throw new Error("Missing field [userGuid]."); }
+		var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName","heroClass"]); if(missingFields.length > 0) { throw new Error("Missing fields:" + JSON.stringify(missingFields)); }
+		var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+		var params = {
+			TableName: appContext.HERO_TABLE_NAME,
+			Item: {
+			  'userGuid': {S: userGuid},
+			  'heroName': {S: heroDTO.heroName},
+			  'heroClass': {S: heroDTO.heroClass},
+			  'gender': {S: heroDTO.gender}
+			},
+			ReturnConsumedCapacity: "TOTAL", 
+			//ProjectionExpression: 'ATTRIBUTE_NAME'
+		};    
+		return new Promise((resolve, reject) => {
+			ddb.putItem(params, function(err, newHeroData) {
+				if (err) { Logger.logInfo(err); reject(err); return; }
+				else {       
+					var newHeroItem = AWS.DynamoDB.Converter.unmarshall(newHeroData); // Seems only new fields are in Dynamo format
+					var heroDTO = new HeroDTO(newHeroItem);
+					resolve(heroDTO);
+				}
+			});   
+		}); 
+	}	
+
 	this.save = function(userGuid, heroDTO, callback) {
 		if(!userGuid) { Logger.logError("Missing field [userGuid]."); callback("Missing field [userGuid].", null); return; }
 		var missingFields = new FV.FieldVerifier().Verify(heroDTO, ["heroName","heroClass"]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
@@ -98,6 +161,48 @@ function HeroDAO() {
 				});
 			}
 		);
+	};
+
+	var getFromDBAsync = async function(userGuid, heroName) {
+		Logger.logInfo("HeroDao.getFromDBAsync()");
+		if(!userGuid) { Logger.logError("Missing field [userGuid]."); callback("Missing field [userGuid].", null); return; }
+		if(!heroName) { Logger.logError("Missing field [heroName]."); callback("Missing field [heroName].", null); return; }
+		//AWS.config.update({region: 'eu-central-1'});
+		var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+		Logger.logInfo("Calling HeroDAO.get() via statement...");
+		
+		return new Promise((resolve, reject) => {
+			ddb.query(
+				{
+					TableName: appContext.HERO_TABLE_NAME,
+					KeyConditionExpression: "userGuid = :userGuid and heroName = :heroName", // "userGuid = :userGuid and heroName = :heroName",
+					ExpressionAttributeValues: {
+						":userGuid": {S: userGuid},
+						":heroName": {S: heroName},            
+					}
+				},
+				(err, heroData) => {
+					if(err) reject(err);
+					Logger.logInfo("Got these data via statement:");
+					Logger.logInfo(JSON.stringify(heroData));
+					var heroItem = AWS.DynamoDB.Converter.unmarshall(heroData.Items[0]); // Seems only new fields are in Dynamo format
+					Logger.logInfo("Hero [" + userGuid + "#" + heroName + "] loaded from DB!");					
+					resolve(heroItem);
+				}
+			);
+		});
+	};
+
+	this.getAsync = async function(userGuid, heroName) {
+		Logger.logInfo("HeroDao.getAsync()");
+		if(!userGuid) { Logger.logError("Missing field [userGuid]."); callback("Missing field [userGuid].", null); return; }
+		if(!heroName) { Logger.logError("Missing field [heroName]."); callback("Missing field [heroName].", null); return; }
+		var heroKey = userGuid+"#"+heroName;
+		//var heroItem = await _this.getFromDBAsync(userGuid, heroName);
+		var heroDTO = await _this.loadDetailsAsync(heroKey);
+		Logger.logInfo("HeroDTO:");
+		Logger.logInfo(JSON.stringify(heroDTO));
+		return heroDTO;		
 	};	
 	
 	this.loadDetails = function(heroKey, callback) {
@@ -120,11 +225,56 @@ function HeroDAO() {
 		});
 	};
 
+	this.loadDetailsAsync = async function(heroKey) {
+		Logger.logInfo("HeroDAO.load");
+		var fileName = "hero-" + heroKey + ".json";
+		var exists = this.existsAsync(fileName);
+		if (!exists) throw new Error("Hero details file [" + fileName + "] does not exist!", null);
+
+		var params = {
+			Bucket: bucketName, 
+			Key: fileName
+		};
+		return new Promise((resolve, reject) => {
+			_this.s3.getObject(params, function(err, s3Object) {
+				if (err) { Logger.logError(err, err.stack); reject(err); }
+				Logger.logInfo("HeroJson=" + JSON.stringify(s3Object.Body.toString()));
+				var heroDTO = JSON.parse(s3Object.Body.toString());
+				resolve(heroDTO);
+			});		
+		});
+	};	
+
 	var patchHero = function(heroDTO) {
 		Logger.logInfo("HeroDAO.patchHero");
 		if(!heroDTO.gender) { Logger.logInfo("Patching gender..."); heroDTO.gender = CONSTS.GENDERS.FEMALE; }
 		return heroDTO;
 	};
+
+	var saveDetailsAsync = async function(heroKey, heroDTO) {
+		Logger.logInfo("HeroDAO.saveDetailsAsync");
+		if(heroDTO) {
+			var fileName = "hero-" + heroKey + ".json";
+			patchHero(heroDTO);			
+			Logger.logInfo("Hero after patching=["+JSON.stringify(heroDTO)+"]");
+			//var exists = this.existsAsync(fileName);
+			//if (!exists) { callback("Hero details file [" + fileName + "] does not exist!", null); return; }			
+			var params = {
+				Body: JSON.stringify(heroDTO),
+				Bucket: bucketName, 
+				Key: fileName
+			};
+			return new Promise((resolve, reject) => {
+				_this.s3.putObject(params, function(err, data) {
+					if (err) { Logger.logError("save:"+err, err.stack); reject(err); return; }
+					Logger.logInfo(data);
+					resolve(true);
+				});
+			});
+		}
+		else
+			Logger.error("hero was null, not saving!");
+	};	
 	
 	this.saveDetails = function(heroKey, heroDTO, callback) {
 		Logger.logInfo("HeroDAO.save");

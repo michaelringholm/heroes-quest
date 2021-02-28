@@ -1,5 +1,5 @@
 {
-	"a":{"mobs":[{"name":"Rabbit", "level":"1", "hp":"8", "ac":"1", probability":"1", "xp":"30", "copper":"2", "items":[], "minAtk":"1", "maxAtk":"2"}]},
+	"a":{"mobs":[{"key":"rabbit", "level":"1", "hp":"8", "ac":"1", probability":"1", "xp":"30", "copper":"2", "items":[], "minAtk":"1", "maxAtk":"2"}]},
 	"b":{"mobs":[{"name":"Beetle", "level":"1", "hp":"5", "ac":"5", "probability":"1", "xp":"40", "copper":"12", "items":[], "minAtk":"1", "maxAtk":"2"}]},
 	"c":{"mobs":[{"name":"Spider", "level":"1", "hp":"6", "ac":"2", "mana":"5", probability":"1", "xp":"50", "copper":"8", "items":[], "minAtk":"1", "maxAtk":"2", "spells":["Poison I"]}]},
 	"d":{"mobs":[{"name":"Fox", "level":"1", "hp":"14", "ac":"2", "probability":"1", "xp":"60", "copper":"5", "items":[], "minAtk":"1", "maxAtk":"2"}]},

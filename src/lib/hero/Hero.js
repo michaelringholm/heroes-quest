@@ -57,6 +57,38 @@ module.exports = function Hero(heroDTO) {
 	this.getHeroKey = function(userGuid, heroName) {
 		return userGuid+"#"+heroName;
 	};
+
+	this.moveAsync = async function(userGuid, heroDTO, direction, map)  {
+		Logger.logInfo("Hero.moveAsync");
+		var targetCoordinates = new Coordinate(_this.heroDTO.currentCoordinates);
+		if(direction == "west")
+			targetCoordinates.x--;
+		else if(direction == "east")
+			targetCoordinates.x++;
+		else if(direction == "north")
+			targetCoordinates.y--;		
+		else if(direction == "south")
+			targetCoordinates.y++;
+		
+		_this.heroKey = _this.getHeroKey(userGuid, heroDTO.heroName);
+		_this.userGuid = userGuid;
+		Logger.logInfo("targetCoordinates=[" + JSON.stringify(targetCoordinates) + "]");
+		
+		var targetLocation = map.getLocation(targetCoordinates);
+		
+		if(targetLocation) {
+			_this.heroDTO.currentCoordinates = targetCoordinates;
+			if(targetLocation.mob) {
+				//battleCache[_this.heroDTO.heroId] = new BattleDTO(_this.heroDTO, targetLocation.mob);
+				Logger.logInfo("Mob found at location, entering battle!");
+				_this.battleDTO = new BattleDTO(_this.heroDTO, targetLocation.mob);				
+				saveStateAsync();
+				return { newLocation: targetLocation, battle: _this.battleDTO }
+			}
+			else return { newLocation: targetLocation, battle: null };
+		}
+		else throw new Error("Invalid location");
+	};
 	
 	// east, west, north, south, up, down
 	this.move = function(userGuid, heroDTO, direction, map, callback)  {
@@ -95,7 +127,16 @@ module.exports = function Hero(heroDTO) {
 			callback("Invalid location", null);
 	};
 
+	var saveStateAsync = async function() {
+		Logger.logInfo("Hero.saveStateAsync");
+		var savedObj = BattleDAO.saveAsync(_this.heroKey, _this.battleDTO);
+		_this.heroDTO.isInBattle = true;
+		var heroDTO = HeroDAO.saveAsync(_this.userGuid, _this.heroDTO);
+		return heroDTO;
+	};	
+
 	var saveState = function(callback) {
+		Logger.logInfo("Hero.saveState");
 		BattleDAO.save(_this.heroKey, _this.battleDTO, (err, saved)=> {
 			if (err) { Logger.logError("move(1):"+err, err.stack); callback(err, null); return; }
 			_this.heroDTO.isInBattle = true;

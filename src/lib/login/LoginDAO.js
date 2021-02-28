@@ -63,6 +63,34 @@ function LoginDAO() {
 		});
 	};
 
+	this.getByTokenAsync = async function(token, callback) {
+		logger.logInfo("LoginDAO.getByToken()...");
+		if(!token) { logger.logError("Missing field [token]."); callback("Missing field [token].", null); return; }
+		var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
+
+		var params = {
+		  FilterExpression: "accessToken = :accessToken",
+		  ExpressionAttributeValues: {
+			":accessToken": { S: token }
+		  },
+		  //ProjectionExpression: "Season, Episode, Title, Subtitle",
+		  TableName: appContext.LOGIN_TABLE_NAME,
+		};
+		
+		//var loginItems = ddb.scan(params).;
+		//console.log("**** loginItems=" + JSON.stringify(loginItems));
+		return new Promise((resolve, reject) => {
+			ddb.scan(params, function (err, loginItems) {
+				if(err) reject(err);
+				logger.logInfo("loginItems=" + JSON.stringify(loginItems));
+				if(loginItems.Items.length == 0) throw new Error("The access token was not found!");
+				if(loginItems.Items.length > 1) throw new Error("Multiple access keys found, something is very wrong!");
+				var loginDTO = AWS.DynamoDB.Converter.unmarshall(loginItems.Items[0]);
+				resolve(loginDTO);
+			});
+		});		
+	};	
+
 	this.setActiveHeroName = function(userName, activeHeroName, callback) {
 		//var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
 		if(!userName) { logger.logError("Missing field [userName]."); callback("Missing field [userName].", null); return; }

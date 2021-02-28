@@ -29,7 +29,49 @@ function BattleDao() {
 			}
 		);
 	};
-	
+
+	this.existsAsync = async function(fileName) {
+		Logger.logInfo("HeroDAO.exists");
+		return new Promise((resolve, reject) => {
+			s3.listObjectsV2(
+				{
+					Bucket: bucketName,
+					Prefix: fileName
+				}, 
+				(err, s3Objects) => 
+				{
+					if (err) { Logger.logError("exists:"+err, err.stack); reject(err); }
+					Logger.logInfo("Objects in bucket are [" + JSON.stringify(s3Objects) + "]");
+					if(s3Objects.KeyCount<1) { resolve(false); return; }
+					for(var i=0; i<s3Objects.Contents.length;i++) {					
+						if(s3Objects.Contents[i].Key == fileName) resolve(true);
+					}
+					resolve(s3Objects.KeyCount==1);
+				}
+			);
+		});
+	};	
+
+	this.loadAsync = async function(heroKey) {
+		Logger.logInfo("BattleDao.load");
+		var fileName = "battle-" + heroKey + ".json";
+		var exists = this.existsAsync(fileName);
+		if (!exists) { Logger.logError("Battle file [" + fileName + "] does not exist!"); throw new Error("Battle file [" + fileName + "] does not exist!"); }
+		var params = {
+			Bucket: bucketName, 
+			Key: fileName
+		};
+
+		return new Promise((resolve, reject) => {
+			s3.getObject(params, function(err, s3Object) {
+				if (err) { Logger.logError(err, err.stack); reject(err); return; }
+				Logger.logInfo("BattleJSON=" + s3Object.Body);
+				var battleDTO = JSON.parse(s3Object.Body);
+				resolve(battleDTO);
+			});		
+		});
+	};	
+
 	this.load = function(heroKey, callback) {
 		Logger.logInfo("BattleDao.load");
 		var fileName = "battle-" + heroKey + ".json";
@@ -51,6 +93,28 @@ function BattleDao() {
 		});
 	};	
 	
+	this.saveAsync = async function(heroKey, battleDTO) {
+		Logger.logInfo("BattleDao.saveAsync");
+		if(!callback) { Logger.logWarn("BattleDao.save called with undefined callback!"); Logger.logWarn(new Error().stack); return; }
+		if(battleDTO) {
+			var fileName = "battle-" + heroKey + ".json";
+			var params = {
+				Body: JSON.stringify(battleDTO),
+				Bucket: bucketName, 
+				Key: fileName
+			};
+			return new Promise((resolve, reject) => {				
+				s3.putObject(params, function(err, data) {
+					if (err) { Logger.logError("save:"+err, err.stack); reject(err); return; }
+					Logger.logInfo(JSON.stringify(data));
+					resolve(battleDTO);
+				});
+			});
+		}
+		else
+			Logger.error("Skipping save of battles as the battles hashmap in invalid!");
+	};	
+
 	this.save = function(heroKey, battleDTO, callback) {
 		Logger.logInfo("BattleDao.save");
 		if(!callback) { Logger.logWarn("BattleDao.save called with undefined callback!"); Logger.logWarn(new Error().stack); return; }
