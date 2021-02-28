@@ -17,6 +17,7 @@ function BattleView() {
     };*/
     
     this.nextRound  = function(commandButton) {        
+        logDebug("next round");
         //$("#battleButtonBar").hide();
         if(!$(commandButton).hasClass("active")) return;
         gameSession.disableToolbarCommands();
@@ -32,7 +33,7 @@ function BattleView() {
     };
     
     var nextRoundSuccess = function(response) {
-        logInfo("next round OK!");
+        logDebug("next round OK!");
         
         if(response.data) {
             if(response.data.battle && !response.data.battle.status.over) {
@@ -41,7 +42,7 @@ function BattleView() {
                 drawBattleScreen(battle);			
             }
             else {
-                logInfo("Battle was already over!");
+                logDebug("Battle was already over!");
                 mapView.drawMap(response.data);
             }
         }
@@ -49,7 +50,7 @@ function BattleView() {
     };
     
     var nextRoundFailed = function(errorMsg) {
-        logInfo(errorMsg);
+        logDebug(errorMsg);
         gameSession.enableToolbarCommands();
     };
 
@@ -117,7 +118,9 @@ function BattleView() {
     };
 
     var battleOver = function(battle) {
+        logDebug("battle over");
         if(battle.status.winner == battle.hero.heroName) {
+            logDebug("hero won");
             $("#battleMobContainer").attr("src", deathCard);
             setHp("#heroHP", battle.hero.hp, battle.hero.baseHp);
             setHp("#mobHP", battle.mob.hp, battle.mob.baseHp);
@@ -125,6 +128,7 @@ function BattleView() {
             setTimeout(function() { _this.drawTreasureScreen(battle); },1500);	                
         }
         else if(battle.status.winner == battle.mob.name) {
+            logDebug("mob won");
             $("#battleHeroContainer").attr("src", deathCard);
             setHp("#heroHP", battle.hero.hp, battle.hero.baseHp);
             setHp("#mobHP", battle.mob.hp, battle.mob.baseHp);
@@ -140,7 +144,7 @@ function BattleView() {
         imgSrc = "./resources/images/mobs/" + mob.key + ".png";
         
         if (!imgSrc) {
-            logInfo("No image found for mob [" + mob.key + "]!");
+            logDebug("No image found for mob [" + mob.key + "]!");
             return "./resources/images/mobs/wild-boar.png";
         }
             
@@ -168,14 +172,18 @@ function BattleView() {
         mobCard.find(".mobName").html(battle.mob.name);
         mobCard.find(".battleAction").html(battle.mob.currentBattleAction);
         mobCard.find(".abilityImpact").html("Impact=(" + battle.mob.abilityImpact + ")");
-        if (battle.mob.name.length > 8)
-            mobCard.find(".mobName").css("font-size", "1rem");
-        else
-            mobCard.find(".mobName").css("font-size", "1.2rem");
+        if(battle.round*1 == 0) {
+            $("#battleContainer .abilityImpact").hide(); 
+            $("#battleContainer .battleAction").hide(); 
+        }
+        else  {
+            $("#battleContainer .abilityImpact").show(); 
+            $("#battleContainer .battleAction").show(); 
+        }
+        if (battle.mob.name.length > 8) mobCard.find(".mobName").css("font-size", "1rem");
+        else mobCard.find(".mobName").css("font-size", "1.2rem");
             
-                        
-        if (battle.status.over)
-            battleOver(battle);
+        if (battle.status.over) battleOver(battle);
         else {
             if(battle.round*1 > 0) {
                 setHp("#battleContainer .hero-card .card .heroHP", battle.hero.hp, battle.hero.baseHp);
@@ -190,7 +198,7 @@ function BattleView() {
     };
 
     this.drawTreasureScreen = function(battle) {
-        logInfo("showing treasure screen!");        
+        logDebug("showing treasure screen!");        
         $("#btnExitTreasureScreen").click(function() {townView.enterTown(battle);});
 
 
@@ -224,7 +232,7 @@ function BattleView() {
     };    
 
     this.drawTreasureScreenOld = function(battle) {
-        logInfo("showing treasure screen!");
+        logDebug("showing treasure screen!");
         $(".function").hide();	
         $(".overlay").hide();
         $(canvasLayer2).hide();
@@ -249,7 +257,7 @@ function BattleView() {
     };
     
     this.drawDeathScreen = function(hero) {
-        logInfo("showing death screen!");	        
+        logDebug("showing death screen!");	        
         $(".function").hide();
         $(".overlay").hide();
         $(canvasLayer2).hide();

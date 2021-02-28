@@ -6,7 +6,7 @@ var _battleDao = require('../battle/BattleDAO.js');
 var _itemFactory = require('../item/ItemFactory.js');
 var CONSTS = require('../common/Constants.js');
 
-module.exports = function Hero(anonObj) {	
+module.exports = function HeroDTO(anonObj) {	
 	var _this = this;
 	this.heroName = "";
 	this.heroId = "";

@@ -15,17 +15,15 @@ function SmithyView() {
         post(_this.VISIT_SMITHY_URL, gameSession, enterSuccess, enterFailed);
     };
 
-    var enterSuccess = function(data) {
+    var enterSuccess = function(response) {
         logInfo("enter town OK!");
-        logInfo(JSON.stringify(data));
-        
-        if(data.town && data.smithy) {
-            var town = data.town;
-            logInfo("Entering the smithy in [" + town.name + "]!");
-            drawSmithy(data.smithy);
+        logInfo(JSON.stringify(response.data));
+        var location = response.data.location;
+        if(location.town && location.town.smithy) {
+            logInfo("Entering the smithy in [" + location.town.name + "]!");
+            drawSmithy(location.town.smithy);
         }
-        else
-            logInfo("You have to be in a town to enter the smithy!");
+        else logInfo("You have to be in a town to enter the smithy!");
     };
 
     var enterFailed = function(errorMsg) {

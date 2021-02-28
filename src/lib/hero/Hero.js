@@ -162,8 +162,7 @@ module.exports = function Hero(heroDTO) {
 		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't enter town"); throw new Error("Hero is in battle, can't enter town"); }
 		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
 		var mapDTO = await MapCache.getMapAsync(heroDTO.currentMapKey);
-		var map = new MidgaardMainMap();
-		map.build(mapDTO);
+		var map = new MidgaardMainMap(mapDTO);
 		var location = map.getLocation(heroDTO.currentCoordinates);
 		var data = { hero: heroDTO, map: map, location: location };
 		return data;
@@ -174,8 +173,7 @@ module.exports = function Hero(heroDTO) {
 		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
 		MapCache.getMap(heroDTO.currentMapKey, (err, mapDTO) => {
 			if(err) { Logger.logError(err); callback("Failed to enter town:" + err, null); return; }
-			var map = new MidgaardMainMap();
-			map.build(mapDTO);
+			var map = new MidgaardMainMap(mapDTO);
 			var location = map.getLocation(heroDTO.currentCoordinates);
 			var data = { hero: heroDTO, map: map, location: location };
 			callback(null, data);
@@ -187,8 +185,7 @@ module.exports = function Hero(heroDTO) {
 		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
 		MapCache.getMap(heroDTO.currentMapKey, (err, mapDTO) => {
 			if(err) { Logger.logError(err); callback("Failed to et map:" + err, null); return; }
-			var map = new MidgaardMainMap();
-			map.build(mapDTO);
+			var map = new MidgaardMainMap(mapDTO);
 			var location = map.getLocation(heroDTO.currentCoordinates);
 			var data = { hero: heroDTO, map: map, location: location };
 			callback(null, data);
@@ -239,7 +236,7 @@ module.exports = function Hero(heroDTO) {
 		_this.heroDTO.conditions = [];
 		_this.heroDTO.mana = _this.heroDTO.baseMana;
 		MapCache.getMap(_this.heroDTO.currentMapKey, (err, mapDTO) => {
-			var baseTown = new MidgaardMainMap().build(mapDTO).getBaseTown();
+			var baseTown = new MidgaardMainMap(mapDTO).getBaseTown();
 			_this.heroDTO.currentCoordinates.x = baseTown.x;
 			_this.heroDTO.currentCoordinates.y = baseTown.y;
 			callback(null, _this.heroDTO);
@@ -257,7 +254,7 @@ module.exports = function Hero(heroDTO) {
 		_this.heroDTO.conditions = [];
 		_this.heroDTO.mana = _this.heroDTO.baseMana;
 		var mapDTO = await MapCache.getMapAsync(_this.heroDTO.currentMapKey);
-		var baseTown = new MidgaardMainMap().build(mapDTO).getBaseTown();
+		var baseTown = new MidgaardMainMap(mapDTO).getBaseTown();
 		_this.heroDTO.currentCoordinates.x = baseTown.x;
 		_this.heroDTO.currentCoordinates.y = baseTown.y;
 		return _this.heroDTO;

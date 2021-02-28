@@ -53,17 +53,17 @@ function TownView() {
         post(_this.VIEW_CHARACTER_URL, gameSession, _this.viewCharacterSuccess, _this.viewCharacterFailed);
     };
 
-    this.viewCharacterSuccess = function(data) {
-        logInfo("enter town OK!");
-        logInfo(JSON.stringify(data));
+    this.viewCharacterSuccess = function(response) {
+        logInfo("view character OK!");
+        var location = response.data.location;
+        logInfo(JSON.stringify(location));
         
-        if(data.town) {
-            var hero = data.hero;
+        if(location.town) {
+            var hero = response.data.hero;
             logInfo("Viewing character sheet for [" + hero + "]!");
             _this.drawCharacterSheet(hero);
         }
-        else
-            logInfo("There is no town at this location, continuing on map!");
+        else logInfo("You are not in a town, can't view character outside of town!");
     };
 
     this.viewCharacterFailed = function(errorMsg) {
@@ -215,7 +215,7 @@ function TownView() {
         $("#characterScreenOverlay").html("This is the character screen!<br/>");
         //$("#characterScreenOverlay").append("The smith has around " + smithy.copper + " copper pieces!<br/>");
         
-        $(".heroName").html("Name:" + hero.name);
+        $(".heroName").html("Name:" + hero.heroName);
         $(".heroLevel").html("Level:" + hero.level);
         $(".heroHP").html("HP:" + hero.hp);
         $(".heroMoney").html("Copper:" + hero.copper);

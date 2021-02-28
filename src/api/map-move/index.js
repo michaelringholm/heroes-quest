@@ -19,7 +19,7 @@ exports.handler = async function(event, context, callback) {
     var method = event.requestContext.http.method;
     var origin = event.headers.origin;
     var referer = event.headers.referer;
-    if(method == "OPTIONS") { preFlightResponse(origin, referer, callback); return; }
+    if(method == "OPTIONS") { HttpController.preFlightResponse(origin, referer, callback); return; }
     Logger.logInfo("method="+method);
     var requestInput = JSON.parse(event.body);
     if(!requestInput.accessToken) { Logger.logError("Access token missing!"); HttpController.respondError(origin, 500, "Access token missing!", callback); return; }
@@ -31,8 +31,7 @@ exports.handler = async function(event, context, callback) {
         if(heroDTO != null && heroDTO.currentMapKey == null) heroDTO.currentMapKey = "midgaard-main";
         if(heroDTO != null && heroDTO.currentCoordinates == null) heroDTO.currentCoordinates = {x:0,y:0};
         var mapDTO = await MapCache.getMapAsync(heroDTO.currentMapKey);
-        var map = new MidgaardMainMap();
-        map.build(mapDTO);
+        var map = new MidgaardMainMap(mapDTO);
         var direction = requestInput.direction;
         if (direction == "west" || direction == "east" || direction == "north" || direction == "south") {
             if (heroDTO.isInBattle) {

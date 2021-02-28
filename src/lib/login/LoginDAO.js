@@ -88,6 +88,31 @@ function LoginDAO() {
 		});		
 	};	
 
+	this.setActiveHeroNameAsync = async function(userName, activeHeroName) {
+		if(!userName) throw new Error("Missing field [userName].");
+		if(!activeHeroName) throw new Error("Missing field [activeHeroName].");
+		var docClient = new AWS.DynamoDB.DocumentClient();
+		var params = {
+			TableName:appContext.LOGIN_TABLE_NAME,
+			Key:{
+				"userName": userName
+			},
+			UpdateExpression: "set activeHeroName = :activeHeroName",
+			ExpressionAttributeValues:{
+				":activeHeroName":activeHeroName
+			},
+			ReturnValues:"ALL_NEW"
+		};
+
+		return new Promise((resolve, reject) => {
+			docClient.update(params, (err, updatedTableItem) => {
+				if(err) { reject(err, null); return; }
+				var updatedHero = AWS.DynamoDB.Converter.unmarshall(updatedTableItem.Attributes); // Seems only new fields are in Dynamo format
+				resolve(updatedHero);
+			})
+		});
+	}	
+
 	this.setActiveHeroName = function(userName, activeHeroName, callback) {
 		//var missingFields = new FV.FieldVerifier().Verify(requestInput, ["userName",]); if(missingFields.length > 0) { callback("Missing fields:" + JSON.stringify(missingFields), null); return; }
 		if(!userName) { logger.logError("Missing field [userName]."); callback("Missing field [userName].", null); return; }

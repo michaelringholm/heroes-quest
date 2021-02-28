@@ -1,13 +1,13 @@
-//var { _logger } = require('../export.js');
-//var { MobFactory } = require('../export.js');
-var _logger = require('../common/Logger.js');
+var Logger = require('../common/Logger.js');
+const { construct } = require('../item/ItemFactory.js');
 var MobFactory = require('../mob/MobFactory.js');
 var Location = require('./Location.js');
-var _mapDao = require('./MapDAO.js');
-//var MobFactory = require('../mob/MobFactory.js');
+var MapDAO = require('./MapDAO.js');
+var Smithy = require('../town/Smithy.js');
 
-function MidgaardMainMap() {
+function MidgaardMainMap(mapDTO) {
 	var _this = this;
+	this.mapDTO = mapDTO;
 	this.key = "midgaard-main";
 	this.name = "Midgaard main map";
 	this.locations = new Array();
@@ -16,7 +16,7 @@ function MidgaardMainMap() {
 	var mobFactory = new MobFactory();
 	
 	var getTerrainType = function(terrainChar) {
-		_logger.logInfo("terrainChar [" + terrainChar + "] translated into [" + _this.mapDefinition.terrainTypes[terrainChar].terrainType + "]");
+		Logger.logInfo("terrainChar [" + terrainChar + "] translated into [" + _this.mapDefinition.terrainTypes[terrainChar].terrainType + "]");
 		var mapDefinitionEntry = _this.mapDefinition.terrainTypes[terrainChar];
 		
 		if(mapDefinitionEntry)
@@ -28,12 +28,15 @@ function MidgaardMainMap() {
 	var getTown = function(targetCoordinates) {	
 		for(var townIndex in  _this.mapDefinition.towns) {
 			if(_this.mapDefinition.towns[townIndex].x == targetCoordinates.x && _this.mapDefinition.towns[townIndex].y == targetCoordinates.y) {
-				_logger.logInfo("Found the town of [" + _this.mapDefinition.towns[townIndex].name + "]!");
-				return _this.mapDefinition.towns[townIndex];
+				Logger.logInfo("Found the town of [" + _this.mapDefinition.towns[townIndex].name + "]!");
+				var town = _this.mapDefinition.towns[townIndex];
+				town.smithy = new Smithy();
+				town.smithy.copper = 500;
+				town.smithy.items = [{id: "f931ad6f-ef91-120d-9f2b-fde6a00757a6",name:"wooden sword",cost:1,atkMin:1,atkMax:3},{id: "b665d5fb-6ca9-5ac1-9efa-603407ab24c6", name:"long sword",cost:20,atkMin:2,atkMax:4},{id: "4a86074a-2ffb-a088-806f-c6c3f4fa98ae",name:"silver long sword",cost:1000,atkMin:3,atkMax:6}];	
+				return town;
 			}
 		}
-
-		return null;
+		throw new Error("No town found at location ["+JSON.stringify(targetCoordinates)+"]!");
 	};
 	
 	this.getBaseTown = function() {
@@ -48,18 +51,18 @@ function MidgaardMainMap() {
 			var mobProbability = 0.5;
 			var mob = null;
 			var randomPropability = Math.random();
-			_logger.logInfo("mobProbability = "  + mobProbability);
-			_logger.logInfo("randomPropability = "  + randomPropability);
+			Logger.logInfo("mobProbability = "  + mobProbability);
+			Logger.logInfo("randomPropability = "  + randomPropability);
 			
 			if(randomPropability < mobProbability) {
 				//var mobIndex = Math.Round(Math.random()*possibleMobKeys.length));
 				//var mob = 
-				_logger.logInfo("Monsters found!");
+				Logger.logInfo("Monsters found!");
 				mob = mobFactory.create();
 			}
-			else _logger.logInfo("No monsters here!");
+			else Logger.logInfo("No monsters here!");
 			
-			//_logger.logInfo("The raw map looks like this = [" + _this.rawMap + "]");
+			//Logger.logInfo("The raw map looks like this = [" + _this.rawMap + "]");
 			var terrainChar = _this.mapMatrix[targetCoordinates.y][targetCoordinates.x];
 			if(terrainChar) {
 				var terrainType = getTerrainType(terrainChar);
@@ -77,19 +80,20 @@ function MidgaardMainMap() {
 				return null;
 		}
 		else {
-			_logger.logInfo("outside of map area!");
+			Logger.logInfo("outside of map area!");
 			return null;
 		}
 	};
 	
-	this.build = function(mapDTO) {
-		_logger.logInfo("MidgaardMainMap.build()");
-		_logger.logInfo("mapDTO="+ JSON.stringify(mapDTO));
+	var construct = function() {
+		Logger.logInfo("MidgaardMainMap.construct()");
+		Logger.logInfo("mapDTO="+ JSON.stringify(_this.mapDTO));
 		//var mob = mobFactory.create();
-		_this.mapMatrix = mapDTO.rawMap.match(/[^\r\n]+/g);
-		_this.mapDefinition = JSON.parse(mapDTO.mapDefinition);
-		return _this;
+		_this.mapMatrix = _this.mapDTO.rawMap.match(/[^\r\n]+/g);
+		_this.mapDefinition = JSON.parse(_this.mapDTO.mapDefinition);
 	};
+
+	construct();
 }
 
 module.exports = MidgaardMainMap;

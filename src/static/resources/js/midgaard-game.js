@@ -102,11 +102,11 @@ function logDebug(msg) {
 } 
 
 function logInfo(msg) {
-	$("#status").prepend("[INFO]: " + msg + "<br/>");
+	$("#debugInfo").prepend("[INFO]: " + msg + "<br/>");
 } 
 
 function logError(msg) {
-	$("#status").prepend("[ERROR]: " + msg + "<br/>");
+	$("#debugInfo").prepend("[ERROR]: " + msg + "<br/>");
 	console.error(msg);
 }  
 
