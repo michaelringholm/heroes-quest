@@ -99,6 +99,15 @@ module.exports =
 			}
 			await saveStateAsync(); 
 			return _this.battleDTO;
+		};
+
+		this.acceptFateAsync = async function (userGuid, heroKey) {
+			Logger.logInfo("Battle.nextRoundAsync");
+			_this.heroKey = heroKey;
+			_this.userGuid = userGuid;
+			delete _this.battleDTO.fateAccepted;
+			_this.battleDTO.status.fateAccepted = true;
+			await saveStateAsync(); 
 		};		
 
 		var getRoundInfo = function() {

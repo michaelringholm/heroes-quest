@@ -36,7 +36,8 @@ export class ComputeStack extends Core.Stack {
         this.createVisitSmithyFunction(apiSecurityGroup, vpc);
         this.createBuyItemFunction(apiSecurityGroup, vpc);
         this.createSellItemFunction(apiSecurityGroup, vpc);
-        this.createPlayRoundFunction(apiSecurityGroup, vpc);        
+        this.createPlayRoundFunction(apiSecurityGroup, vpc);
+        this.createFunctionAcceptFate(apiSecurityGroup, vpc);
         //this.createUpdateStatusFunction();
     }
 
@@ -113,7 +114,10 @@ export class ComputeStack extends Core.Stack {
     }
     private createPlayRoundFunction(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
         return this.createLambdaFunction(apiSecurityGroup, "play-round-fn", "index.handler", "../src/api/play-round", vpc);
-    }    
+    } 
+    private createFunctionAcceptFate(apiSecurityGroup: EC2.ISecurityGroup, vpc: EC2.IVpc) {
+        return this.createLambdaFunction(apiSecurityGroup, "accept-fate-fn", "index.handler", "../src/api/accept-fate", vpc);
+    }  
     
     /*private createStepFunctionsTrigger(apiSecurityGroup: ISecurityGroup, vpc: IVpc, queue:SQS.IQueue) {
         var sfnLambdaTriggerFunction = this.createLambdaFunction(apiSecurityGroup, "invoke-sfn-api-lam", "index.handler", "assets/invoke-sfn-api/", vpc);

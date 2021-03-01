@@ -2,12 +2,13 @@ var battleView = {};
 $(function() {	
     battleView = new BattleView();
     $("#battleBottomToolbar .commandButton.active").click(function(e) {battleView.nextRound(e.currentTarget);});
-    $("#btnExitDeathScreen").click(function() {townView.enterTown();});
+    $("#btnAcceptFate").click(function() {townView.enterTown();});
 });
 
 function BattleView() {
     var _this = this;
     this.PLAY_ROUND_URL = "https://xirsfgg6tb.execute-api.eu-north-1.amazonaws.com/play-round-fn";
+    this.ACCEPT_FATE_URL = "https://xirsfgg6tb.execute-api.eu-north-1.amazonaws.com/accept-fate-fn";
     //var heroView = new HeroView();
     var deathCard = "./resources/images/battle/card-dead.png";
 
@@ -53,6 +54,27 @@ function BattleView() {
         logDebug(errorMsg);
         gameSession.enableToolbarCommands();
     };
+
+    this.acceptFate  = function() {        
+        logDebug("acceptFate()");
+        gameSession.disableToolbarCommands();
+        gameSession.ability = null;
+        $("#btnAcceptFate").effect("pulsate", 2000);        
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.ACCEPT_FATE_URL, gameSession, acceptFateSuccess, acceptFateFailed);
+    };
+    
+    var acceptFateSuccess = function(response) {
+        logDebug("acceptFate() success!");
+        gameSession.enableToolbarCommands();
+        townView.enterTown();        
+    };
+    
+    var acceptFateFailed = function(errorMsg) {
+        logError("acceptFate() failed!");
+        logError(errorMsg);
+        gameSession.enableToolbarCommands();
+    };    
 
     this.startOrResumeBattle = function(battle) {
         soundPlayer.playSound("./resources/sounds/danger.wav");
