@@ -22,17 +22,17 @@ function MapView() {
         printJson(JSON.stringify(response));
         
         if(response) {
-            if(response.data && response.data.newLocation && response.data.newLocation.terrainType) { // The move resulted in an actual move
-                var location = response.data.newLocation;
-                var targetCoordinates = location.targetCoordinates;
-                drawHeroMapIcon(canvasLayer2, targetCoordinates.x, targetCoordinates.y);
-                logDebug("you moved to a new location");
-            }
-            else if(response.data.hero && response.data.battle) { // The move resulted in a fight
+            if(response.data && response.data.battle) { // The move resulted in a fight
                 var battle = response.data.battle;                
                 battleView.startOrResumeBattle(battle);
                 logDebug("you were surprised by monsters!");
             }
+            else if(response.data && response.data.newLocation && response.data.newLocation.terrainType) { // The move resulted in an actual move
+                var location = response.data.newLocation;
+                var targetCoordinates = location.targetCoordinates;
+                drawHeroMapIcon(canvasLayer2, targetCoordinates.x, targetCoordinates.y);
+                logDebug("you moved to a new location");
+            }            
         }
     };
     

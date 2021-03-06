@@ -2,13 +2,15 @@ var battleView = {};
 $(function() {	
     battleView = new BattleView();
     $("#battleBottomToolbar .commandButton.active").click(function(e) {battleView.nextRound(e.currentTarget);});
-    $("#btnAcceptFate").click(function() {townView.enterTown();});
+    $("#btnAcceptFate").click(function() {battleView.acceptFate();});
+    $("#btnLootCorpse").click(function() {battleView.lootCorpse();});
 });
 
 function BattleView() {
     var _this = this;
     this.PLAY_ROUND_URL = "https://xirsfgg6tb.execute-api.eu-north-1.amazonaws.com/play-round-fn";
-    this.ACCEPT_FATE_URL = "https://xirsfgg6tb.execute-api.eu-north-1.amazonaws.com/accept-fate-fn";
+    this.ACCEPT_FATE_URL = "https://emdvapjab0.execute-api.eu-north-1.amazonaws.com/accept-fate-fn";
+    this.LOOT_CORPSE_URL = "https://emdvapjab0.execute-api.eu-north-1.amazonaws.com/loot-corpse-fn";
     //var heroView = new HeroView();
     var deathCard = "./resources/images/battle/card-dead.png";
 
@@ -72,6 +74,27 @@ function BattleView() {
     
     var acceptFateFailed = function(errorMsg) {
         logError("acceptFate() failed!");
+        logError(errorMsg);
+        gameSession.enableToolbarCommands();
+    };    
+
+    this.lootCorpse  = function() {        
+        logDebug("lootCorpse()");
+        gameSession.disableToolbarCommands();
+        gameSession.ability = null;
+        $("#btnLootCorpse").effect("pulsate", 2000);        
+        gameSession.accessToken = gameSession.getAccessToken(); gameSession.userName = gameSession.getUserName();
+        post(_this.LOOT_CORPSE_URL, gameSession, lootCorpseSuccess, lootCorpseFailed);
+    };
+    
+    var lootCorpseSuccess = function(response) {
+        logDebug("lootCorpse() success!");
+        gameSession.enableToolbarCommands();
+        townView.enterTown();        
+    };
+    
+    var lootCorpseFailed = function(errorMsg) {
+        logError("lootCorpse() failed!");
         logError(errorMsg);
         gameSession.enableToolbarCommands();
     };    
@@ -221,8 +244,6 @@ function BattleView() {
 
     this.drawTreasureScreen = function(battle) {
         logDebug("showing treasure screen!");        
-        $("#btnExitTreasureScreen").click(function() {townView.enterTown(battle);});
-
 
         $(".function").hide();
         $(".overlay").hide();

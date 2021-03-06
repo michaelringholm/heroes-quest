@@ -48,12 +48,12 @@ function HeroView() {
         logDebug("choose hero OK!");
         if(response) {
             printDebug(response.data.hero);
-            if(response.data.battle && response.data.battle.mob && response.data.battle.hero) { // The hero is already in a fight
+            if(response.data.battle && response.data.battle.mob && response.data.battle.hero && (!response.data.battle.status.fateAccepted || !response.data.battle.status.corpseLooted)) { // The hero is already in a fight
                 battleView.startOrResumeBattle(response.data.battle);
                 logDebug("you resume the battle!");
             }		
-            else if(response.data.town)
-                townView.drawTown(response.data.town);
+            else if(response.data.location.town)
+                townView.drawTown(response.data.location.town);
             else
                 mapView.drawMap(response);
         }

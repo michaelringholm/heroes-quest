@@ -24,7 +24,7 @@ exports.handler = async function(event, context, callback) {
         heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
         var battleDTO = await BattleDAO.loadAsync(heroDTO.heroKey);        
         var battle = new Battle(battleDTO);
-        await battle.acceptFateAsync(loginDTO.userGuid, heroDTO.heroKey);
+        await battle.lootCorpseAsync(loginDTO.userGuid, heroDTO.heroKey);
         HttpController.respondOK(origin, {hero:battleDTO.hero, battle:battleDTO}, callback);
     }
     catch(ex) { Logger.logError(ex.stack); HttpController.respondError(origin, 500, ex.toString(), callback); return }    

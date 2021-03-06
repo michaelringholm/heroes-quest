@@ -6,10 +6,9 @@ var BattleDAO = require('./BattleDAO.js');
 
 
 module.exports =
-	function Battle(battleDTO, heroDTO) {
+	function Battle(battleDTO) {
 		var _this = this;
 		this.battleDTO = battleDTO;
-		this.heroDTO = heroDTO;
 		this.heroKey;
 		this.userGuid;
 
@@ -77,7 +76,7 @@ module.exports =
 
 			if (_this.battleDTO.status.over) {
 				Logger.logInfo("battle is over!");
-				_this.heroDTO.isInBattle = false;
+				_this.battleDTO.hero.isInBattle = false;
 				await saveStateAsync(); 
 				return _this.battleDTO;
 			}
@@ -102,13 +101,22 @@ module.exports =
 		};
 
 		this.acceptFateAsync = async function (userGuid, heroKey) {
-			Logger.logInfo("Battle.nextRoundAsync");
+			Logger.logInfo("Battle.acceptFateAsync()");
 			_this.heroKey = heroKey;
 			_this.userGuid = userGuid;
-			delete _this.battleDTO.fateAccepted;
-			_this.battleDTO.status.fateAccepted = true;
+			if(_this.battleDTO.status.over && _this.battleDTO.status.looser == _this.battleDTO.hero.heroName) // TODO use id instead as name may clash with monster name
+				_this.battleDTO.status.fateAccepted = true;
 			await saveStateAsync(); 
 		};		
+
+		this.lootCorpseAsync = async function (userGuid, heroKey) {
+			Logger.logInfo("Battle.lootCorpseAsync()");
+			_this.heroKey = heroKey;
+			_this.userGuid = userGuid;
+			if(_this.battleDTO.status.over && _this.battleDTO.status.winner == _this.battleDTO.hero.heroName) // TODO use id instead as name may clash with monster name
+				_this.battleDTO.status.corpseLooted = true;
+			await saveStateAsync(); 
+		};			
 
 		var getRoundInfo = function() {
 			var roundInfo = "Round:" +  _this.battleDTO.round + "\n";
@@ -187,9 +195,10 @@ module.exports =
 			return playerX;
 		};
 
-		var battleEndedAsync = async function (winner, loser) {			
+		var battleEndedAsync = async function (winner, loser) {
+			Logger.logInfo("Battle.battleEndedAsync()");		
 			_this.battleDTO.status.over = true;
-			_this.heroDTO.isInBattle = false;
+			_this.battleDTO.hero.isInBattle = false;
 
 			if (winner.heroId == _this.battleDTO.hero.heroId) {
 				_this.battleDTO.status.winner = winner.heroName;
@@ -244,7 +253,7 @@ module.exports =
 			Logger.logInfo("Battle.saveState()");
 			BattleDAO.save(_this.heroKey, _this.battleDTO, (err, battleDTO) => {
 				if(err) { Logger.logError(err); callback(err, null); return; }
-				HeroDAO.save(_this.userGuid, _this.heroDTO, (err, heroDTO) => {
+				HeroDAO.save(_this.userGuid, _this.battleDTO.hero, (err, heroDTO) => {
 					if(err) { Logger.logError(err); callback(err, null); return; }
 					callback(null, _this.battleDTO);
 				});
@@ -254,7 +263,7 @@ module.exports =
 		var saveStateAsync = async function() {
 			Logger.logInfo("Battle.saveStateAsync()");
 			var battleDTO = await BattleDAO.saveAsync(_this.heroKey, _this.battleDTO);
-			var heroDTO = await HeroDAO.saveAsync(_this.userGuid, _this.heroDTO);
+			var heroDTO = await HeroDAO.saveAsync(_this.userGuid, _this.battleDTO.hero);
 			return _this.battleDTO;
 		};		
 

@@ -75,14 +75,14 @@ function TownView() {
         post(_this.TRAIN_HERO_URL, gameSession, _this.trainSuccess, _this.trainFailed);
     };
 
-    this.trainSuccess = function(data) {
+    this.trainSuccess = function(response) {
         logInfo("enter town OK!");
-        logInfo(JSON.stringify(data));
+        logInfo(JSON.stringify(response.data));
         
-        if(data.town) {
-            var town = data.town;
+        if(response.data.location.town) {
+            var town = response.data.location.town;
             logInfo("Training in the town of [" + town.name + "]!");
-            _this.drawTraining(data.hero, data.trainingOutcome, data.town);
+            _this.drawTraining(response.data.hero, response.data.trainingResult, town);
         }
         else
             logInfo("There is no town at this location, continuing on map!");
@@ -97,14 +97,14 @@ function TownView() {
         post(_this.VISIT_MEADHALL_URL, gameSession, _this.visitMeadhallSuccess, _this.visitMeadhallFailed);
     };
 
-    this.visitMeadhallSuccess = function(data) {
+    this.visitMeadhallSuccess = function(response) {
         logInfo("enter town OK!");
         logInfo(JSON.stringify(data));
         
-        if(data.town) {
-            var town = data.town;
+        if(response.data.location.town) {
+            var town = response.data.location.town;
             logInfo("Entering the town of [" + town.name + "]!");
-            _this.drawMeadhall(town, data.actionResponse);
+            _this.drawMeadhall(town, response.data.visit);
         }
         else
             logInfo("There is no town at this location, continuing on map!");
@@ -153,7 +153,7 @@ function TownView() {
       ctx1.fillText(town.name,50,30);
     };
 
-    this.drawMeadhall = function(town, actionResponse) {
+    this.drawMeadhall = function(town, visit) {
         $(".function").hide();
         $(".overlay").hide();
         $(canvasLayer2).hide();
@@ -163,12 +163,12 @@ function TownView() {
         
         $("#container").css("background-image", "url('./resources/images/meadhall-background.jpg')"); 	
         
-        if(actionResponse.success) {
+        if(visit.rested) {
             $("#meadhallTextOverlay").html("You feel rested, and both body and mind feels renewed!<br/>");
             $("#meadhallTextOverlay").append("Your happily pay the head brewer what you owe him!");
         }
         else {
-            $("#meadhallTextOverlay").html(actionResponse.reason + "<br/>");
+            $("#meadhallTextOverlay").html(visit.message + "<br/>");
         }
     };
 

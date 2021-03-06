@@ -24,9 +24,9 @@ exports.handler = async function(event, context, callback) {
         var heroDTO = await HeroDAO.getAsync(loginDTO.userGuid, loginDTO.activeHeroName);
         heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
         var battleDTO = await BattleDAO.loadAsync(heroDTO.heroKey);        
-        battleDTO = await new Battle(battleDTO, heroDTO).nextRoundAsync(loginDTO.userGuid, heroDTO.heroKey, requestInput.battleAction);
+        battleDTO = await new Battle(battleDTO).nextRoundAsync(loginDTO.userGuid, heroDTO.heroKey, requestInput.battleAction);
         Logger.logInfo("***battleDTO="+JSON.stringify(battleDTO));
-        HttpController.respondOK(origin, {hero:heroDTO, battle:battleDTO}, callback);
+        HttpController.respondOK(origin, {hero:battleDTO.hero, battle:battleDTO}, callback);
     }
     catch(ex) { Logger.logError(ex.stack); HttpController.respondError(origin, 500, ex.toString(), callback); return }    
 };

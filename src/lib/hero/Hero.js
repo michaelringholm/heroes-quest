@@ -158,6 +158,18 @@ module.exports = function Hero(heroDTO) {
 		}
 	};
 
+	this.visitMeadhallAsync = async function(userGuid, heroDTO) {
+		if(_this.heroDTO.copper > 0) {
+			_this.heroDTO.copper -= 1;
+			_this.heroDTO.hp = _this.heroDTO.baseHp;
+			_this.heroDTO.mana = _this.heroDTO.baseMana;
+			_this.heroDTO.rested = true;
+			await HeroDAO.saveAsync(userGuid, heroDTO);
+			return {rested:true, message:"You pay the merchant 1 copper for a meal and a room and feel rested"};
+		}
+		else return {rested:false,message:"Not enough money to visit the mead hall, you need at least 1 copper!"};
+	};	
+
 	this.enterTownAsync = async function(loginDTO, heroDTO) {
 		if(heroDTO.isInBattle) { Logger.logError("Hero is in battle, can't enter town"); throw new Error("Hero is in battle, can't enter town"); }
 		heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
@@ -195,6 +207,36 @@ module.exports = function Hero(heroDTO) {
 	this.getXpTarget = function() {
 		return _this.heroDTO.level*_this.heroDTO.level*1000;
 	}
+
+	this.trainAsync = async function() {
+		var xpTarget = _this.getXpTarget();
+		
+		if(_this.heroDTO.xp >= xpTarget) {		
+			var cost = _this.heroDTO.level*_this.heroDTO.level*100;
+			if(_this.heroDTO.copper >= cost) {
+				_this.heroDTO.copper -= cost;
+				
+				 var extraHp = Math.round(((Math.random()*2)*(_this.heroDTO.sta/3))+1);
+				 var extraMana = Math.round(((Math.random()*2)*(_this.heroDTO.int/3))+1);
+				 
+				 _this.heroDTO.baseHp += extraHp;
+				 _this.heroDTO.baseMana += extraMana;
+				 _this.heroDTO.level++;
+				 await saveStateAsync();
+				return {trained:true,reason:"You learned new skills and arts and feel stronger and more confident, but with a little less copper in your pocket!"};
+			}
+			else {
+				var errMsg = "Not enough money to train, you need at least [" + cost + "] copper!";
+				Logger.logError(errMsg);
+				return {trained:false, reason:errMsg};
+			}
+		}
+		else {
+			var errMsg = "Not enough xp to train, you need [" + (xpTarget-_this.heroDTO.xp*1) + "] more XP to become level [" + (_this.heroDTO.level+1) + "]!";
+			Logger.logError(errMsg);
+			return {trained:false, reason:errMsg};
+		}
+	};	
 	
 	this.train = function() {
 		var xpTarget = _this.getXpTarget();
