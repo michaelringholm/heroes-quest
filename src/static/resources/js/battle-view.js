@@ -10,7 +10,7 @@ function BattleView() {
     var _this = this;
     this.PLAY_ROUND_URL = "https://xirsfgg6tb.execute-api.eu-north-1.amazonaws.com/play-round-fn";
     this.ACCEPT_FATE_URL = "https://emdvapjab0.execute-api.eu-north-1.amazonaws.com/accept-fate-fn";
-    this.LOOT_CORPSE_URL = "https://emdvapjab0.execute-api.eu-north-1.amazonaws.com/loot-corpse-fn";
+    this.LOOT_CORPSE_URL = "https://jodtwtw9r1.execute-api.eu-north-1.amazonaws.com/loot-corpse-fn";
     //var heroView = new HeroView();
     var deathCard = "./resources/images/battle/card-dead.png";
 
@@ -39,14 +39,14 @@ function BattleView() {
         logDebug("next round OK!");
         
         if(response.data) {
-            if(response.data.battle && !response.data.battle.status.over) {
+            if(response.data.battle && (!response.data.battle.status.fateAccepted || !response.data.battle.status.corpseLooted)) {
                 var battle = response.data.battle;
                 var hero = response.data.hero;
                 drawBattleScreen(battle);			
             }
             else {
                 logDebug("Battle was already over!");
-                mapView.drawMap(response.data);
+                mapView.drawMap(response);
             }
         }
         gameSession.enableToolbarCommands();
@@ -90,7 +90,7 @@ function BattleView() {
     var lootCorpseSuccess = function(response) {
         logDebug("lootCorpse() success!");
         gameSession.enableToolbarCommands();
-        townView.enterTown();        
+        mapView.drawMap(response);
     };
     
     var lootCorpseFailed = function(errorMsg) {
@@ -164,7 +164,7 @@ function BattleView() {
 
     var battleOver = function(battle) {
         logDebug("battle over");
-        if(battle.status.winner == battle.hero.heroName) {
+        if(battle.status.winner.heroId == battle.hero.heroId) {
             logDebug("hero won");
             $("#battleMobContainer").attr("src", deathCard);
             setHp("#heroHP", battle.hero.hp, battle.hero.baseHp);
@@ -172,7 +172,7 @@ function BattleView() {
             soundPlayer.playSound("./resources/sounds/victory.wav");
             setTimeout(function() { _this.drawTreasureScreen(battle); },1500);	                
         }
-        else if(battle.status.winner == battle.mob.name) {
+        else if(battle.status.winner.mobName == battle.mob.name) {
             logDebug("mob won");
             $("#battleHeroContainer").attr("src", deathCard);
             setHp("#heroHP", battle.hero.hp, battle.hero.baseHp);

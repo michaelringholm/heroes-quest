@@ -6,6 +6,8 @@ var { LoginDAO } = require("om-hq-lib");
 var { Battle } = require("om-hq-lib");
 var { BattleDAO } = require("om-hq-lib");
 var { HttpController } = require("om-hq-lib");
+var { MidgaardMainMap } = require("om-hq-lib");
+var { MapCache } = require("om-hq-lib");
 
 // Callback is (error, response)
 exports.handler = async function(event, context, callback) {
@@ -25,7 +27,10 @@ exports.handler = async function(event, context, callback) {
         var battleDTO = await BattleDAO.loadAsync(heroDTO.heroKey);        
         var battle = new Battle(battleDTO);
         await battle.lootCorpseAsync(loginDTO.userGuid, heroDTO.heroKey);
-        HttpController.respondOK(origin, {hero:battleDTO.hero, battle:battleDTO}, callback);
+        var mapDTO = await MapCache.getMapAsync(heroDTO.currentMapKey);
+        var map = new MidgaardMainMap(mapDTO);
+        var location = map.getLocation(heroDTO.currentCoordinates);
+        HttpController.respondOK(origin, {hero:battleDTO.hero,battle:battleDTO,map:map,location:location}, callback);
     }
     catch(ex) { Logger.logError(ex.stack); HttpController.respondError(origin, 500, ex.toString(), callback); return }    
 };

@@ -104,18 +104,22 @@ module.exports =
 			Logger.logInfo("Battle.acceptFateAsync()");
 			_this.heroKey = heroKey;
 			_this.userGuid = userGuid;
-			if(_this.battleDTO.status.over && _this.battleDTO.status.looser == _this.battleDTO.hero.heroName) // TODO use id instead as name may clash with monster name
+			if(_this.battleDTO.status.over && !_this.battleDTO.status.fateAccepted && _this.battleDTO.status.loser.heroId == _this.battleDTO.hero.heroId) {
 				_this.battleDTO.status.fateAccepted = true;
-			await saveStateAsync(); 
+				await heroLostAsync();
+				await saveStateAsync(); 
+			}
 		};		
 
 		this.lootCorpseAsync = async function (userGuid, heroKey) {
 			Logger.logInfo("Battle.lootCorpseAsync()");
 			_this.heroKey = heroKey;
 			_this.userGuid = userGuid;
-			if(_this.battleDTO.status.over && _this.battleDTO.status.winner == _this.battleDTO.hero.heroName) // TODO use id instead as name may clash with monster name
+			if(_this.battleDTO.status.over && !_this.battleDTO.status.corpseLooted && _this.battleDTO.status.winner.heroId == _this.battleDTO.hero.heroId) { // TODO use id instead as name may clash with monster name 
 				_this.battleDTO.status.corpseLooted = true;
-			await saveStateAsync(); 
+				await heroWon();
+				await saveStateAsync();
+			}
 		};			
 
 		var getRoundInfo = function() {
@@ -201,16 +205,14 @@ module.exports =
 			_this.battleDTO.hero.isInBattle = false;
 
 			if (winner.heroId == _this.battleDTO.hero.heroId) {
-				_this.battleDTO.status.winner = winner.heroName;
-				_this.battleDTO.status.loser = loser.name;
+				_this.battleDTO.status.winner = {heroId:_this.battleDTO.hero.heroId};
+				_this.battleDTO.status.loser={mobName:loser.name};
 				Logger.logInfo(winner.heroName + " won! and " + loser.name + " lost!");
-				heroWon();
 			}
 			else {
-				_this.battleDTO.status.winner = winner.name;
-				_this.battleDTO.status.loser = loser.heroName;
+				_this.battleDTO.status.winner={mobName:winner.name};
+				_this.battleDTO.status.loser={heroId:_this.battleDTO.hero.heroId};
 				Logger.logInfo(winner.name + " won! and " + loser.heroName + " lost!");
-				heroLostAsync(heroDTO);
 			}			
 		};
 
@@ -220,9 +222,10 @@ module.exports =
 			_this.battleDTO.hero.gold += _this.battleDTO.mob.gold;
 			_this.battleDTO.hero.silver += _this.battleDTO.mob.silver;
 			_this.battleDTO.hero.copper += _this.battleDTO.mob.copper;
-
-			for (var itemIndex in _this.battleDTO.mob.items)
-				_this.battleDTO.hero.items.push(_this.battleDTO.mob.items[itemIndex]);
+			for (var itemIndex in _this.battleDTO.mob.items) _this.battleDTO.hero.items.push(_this.battleDTO.mob.items[itemIndex]);
+			_this.battleDTO.mob.items = [];
+			_this.battleDTO.mob.copper = 0;
+			_this.battleDTO.mob.xp = 0;
 		};
 
 		var heroLost = function (callback) {
