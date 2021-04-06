@@ -48,7 +48,7 @@ function HeroView() {
         logDebug("choose hero OK!");
         if(response) {
             printDebug(response.data.hero);
-            if(response.data.battle && response.data.battle.mob && response.data.battle.hero && (!response.data.battle.status.fateAccepted || !response.data.battle.status.corpseLooted)) { // The hero is already in a fight
+            if(response.data.battle && response.data.battle.mob && response.data.battle.hero && (!response.data.battle.status.fateAccepted && !response.data.battle.status.corpseLooted)) { // The hero is already in a fight
                 battleView.startOrResumeBattle(response.data.battle);
                 logDebug("you resume the battle!");
             }		

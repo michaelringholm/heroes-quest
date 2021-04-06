@@ -23,12 +23,12 @@ exports.handler = async function(event, context, callback) {
         var loginDTO = await LoginDAO.getByTokenAsync(requestInput.accessToken);
         var heroDTO = await HeroDAO.getAsync(loginDTO.userGuid, loginDTO.activeHeroName);
         var hero = new Hero(heroDTO);
-        var visit = await hero.visitMeadhallAsync(loginDTO.userGuid, heroDTO.heroKey);
+        var visit = await hero.visitMeadhallAsync(loginDTO.userGuid, heroDTO);
         var mapDTO = await MapCache.getMapAsync(heroDTO.currentMapKey);
         var map = new MidgaardMainMap(mapDTO);
         var location = map.getLocation(heroDTO.currentCoordinates);
         HttpController.respondOK(origin, {hero:heroDTO,location:location,visit:visit}, callback);
     }
-    catch(ex) { HttpController.respondError(origin, 500, "Failed to view character:"+ex, callback); return; }
+    catch(ex) { Logger.logError(ex.stack); HttpController.respondError(origin, 500, ex.toString(), callback); return }
 };
 

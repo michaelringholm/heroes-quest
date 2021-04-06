@@ -30,7 +30,7 @@ exports.handler = async function(event, context, callback) {
     heroDTO.heroKey = loginDTO.userGuid+"#"+heroDTO.heroName;
     if(!heroDTO.heroId || heroDTO.heroId == null || heroDTO.heroId == "") { heroDTO.heroId = UUID.v4(); await HeroDAO.saveAsync(loginDTO.userGuid, heroDTO); } // TEMP FIX
     var battleDTO = await BattleDAO.loadAsync(heroDTO.heroKey);
-    if(!battleDTO.status.winner.heroId || !battleDTO.status.winner.mobName) { battleDTO.status.winner={heroId:heroDTO.heroId}; battleDTO.status.loser={mobName:battleDTO.mob.name}; await BattleDAO.saveAsync(heroDTO.heroKey,battleDTO); } // TEMP FIX        
+    //if(!battleDTO.status.winner.heroId || !battleDTO.status.winner.mobName) { battleDTO.status.winner={heroId:heroDTO.heroId}; battleDTO.status.loser={mobName:battleDTO.mob.name}; await BattleDAO.saveAsync(heroDTO.heroKey,battleDTO); } // TEMP FIX        
     Logger.logInfo("battleDTO="+JSON.stringify(battleDTO));
     var mapDTO = await MapCache.getMapAsync(heroDTO.currentMapKey);
     var map = new MidgaardMainMap(mapDTO);

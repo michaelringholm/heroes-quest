@@ -115,7 +115,7 @@ module.exports =
 			Logger.logInfo("Battle.lootCorpseAsync()");
 			_this.heroKey = heroKey;
 			_this.userGuid = userGuid;
-			if(_this.battleDTO.status.over && !_this.battleDTO.status.corpseLooted && _this.battleDTO.status.winner.heroId == _this.battleDTO.hero.heroId) { // TODO use id instead as name may clash with monster name 
+			if(_this.battleDTO.status.over && !_this.battleDTO.status.corpseLooted && _this.battleDTO.status.winner.heroId == _this.battleDTO.hero.heroId) {
 				_this.battleDTO.status.corpseLooted = true;
 				await heroWon();
 				await saveStateAsync();
@@ -226,14 +226,6 @@ module.exports =
 			_this.battleDTO.mob.items = [];
 			_this.battleDTO.mob.copper = 0;
 			_this.battleDTO.mob.xp = 0;
-		};
-
-		var heroLost = function (callback) {
-			Logger.logInfo("hero lost the battle!");
-			new Hero(_this.battleDTO.hero).died(_this.battleDTO.mob, (err, heroDTO) => {
-				if(err) { Logger.logError(err); callback(err, null); return; }
-				callback(null, heroDTO);
-			});
 		};
 
 		var heroLostAsync = async function () {

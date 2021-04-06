@@ -28,6 +28,6 @@ exports.handler = async function(event, context, callback) {
         Logger.logInfo("***battleDTO="+JSON.stringify(battleDTO));
         HttpController.respondOK(origin, {hero:battleDTO.hero, battle:battleDTO}, callback);
     }
-    catch(ex) { Logger.logError(ex.stack); HttpController.respondError(origin, 500, ex.toString(), callback); return }    
+    catch(ex) { Logger.logError(ex.stack); HttpController.respondError(origin, 500, ex.toString(), callback); return }
 };
 
