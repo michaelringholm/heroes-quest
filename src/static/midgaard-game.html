@@ -51,23 +51,7 @@
 		<div style="margin-top: 10px;; margin-left: 10px;">
 			<div class="row heroes">					
 			</div>
-		</div>
-		<!-- Templates -->
-		<!-- https://www.pngfind.com/mpng/hibJiii_silhouette-ork-fighter-warrior-fantasy-silhouette-hd-png/ -->
-		<div class="hero-card template col">
-			<div class="card" style="width: 18rem; height: 28rem;">
-				<img src="" class="card-img-top" style="height: 16rem;" alt="Warrior">
-				<div class="card-body" style="height: 12rem;">
-					<h5 class="card-title hero-name">Hero</h5>
-					<p class="card-text hero-text">Description</p>
-				</div>
-			</div>
-		</div>
-		<div class="hero-card-empty template col">
-			<div class="card" style="width: 18rem; height: 28rem;">
-				<img src="./resources/images/characters/card-backside.jpg" class="card-img-top" style="height: 28rem;" alt="Empty">
-			</div>
-		</div>
+		</div>		
 	</div>
 
 	<div id="createHeroContainer" class="function" style="display:none; height: 180px; width: 800px;">
@@ -138,6 +122,8 @@
 	<!-- MAP -->
 	<!--<div w3-include-html="map-toolbar.html"></div>-->
 	<!--<div id="mapHtmlPlaceholder"><iframe id="test" src="map-toolbar.html" style="z-index: -100;"></iframe></div>-->
+
+	<!-- TOOLBARS -->
 	<div id="loginBottomToolbar" class="function bottomToolbar container-fluid">
 		<div class="row">
 			<div class="col"></div>
@@ -223,6 +209,27 @@
 			</div>
 		</div>		
 	</div>
+
+	<!-- TEMPLATES -->
+	<!-- https://www.pngfind.com/mpng/hibJiii_silhouette-ork-fighter-warrior-fantasy-silhouette-hd-png/ -->
+	<div class="hero-card template col">
+		<div class="card" style="width: 18rem; height: 28rem;">
+			<img src="" class="card-img-top" style="height: 16rem;" alt="Warrior">
+			<div class="card-body" style="height: 12rem;">
+				<h5 class="card-title hero-name">Hero</h5>
+				<p class="card-text hero-text">Description</p>
+			</div>
+		</div>
+	</div>
+	<div class="hero-card-empty template col">
+		<div class="card" style="width: 18rem; height: 28rem;">
+			<img src="./resources/images/characters/card-backside.jpg" class="card-img-top" style="height: 28rem;" alt="Empty">
+		</div>
+	</div>
+	<div class="bagItem template">
+		<div class="characterItemContainerMetaData"></div>
+		<img class="characterItemContainer itemContainer"></img>
+	</div>
 	
 	<!-- OVERLAYS -->
 	<div id="meadhallTextOverlay" class="function" style="display:none; width: 760px; height: 68px; font-size: 20px;"></div>
@@ -240,7 +247,7 @@
 		<div class="smithyItemContainer itemContainer" style="right: 240px; top: 300px;"></div>
 	</div>
 	<div id="characterScreenOverlay" class="function" style="display:none; width: 560px; height: 108px; font-size: 20px; top: 40px; left: 40px; margin: 0px;"></div>
-	<div id="characterScreen" class="function" style="display:none; width: 860px; height: 698px; font-size: 20px; background-color: transparent;">
+	<div id="characterScreenOld" class="function" style="display:none; width: 860px; height: 698px; font-size: 20px; background-color: transparent;">
 		<div style="position: absolute;left: 0px; top: 0px;" class="heroName"></div>
 		<div style="position: absolute;left: 0px; top: 20px;" class="heroLevel"></div>
 		<div style="position: absolute;left: 0px; top: 40px;" class="heroHP"></div>
@@ -257,6 +264,22 @@
 		<div class="characterItemContainer itemContainer" style="right: 200px; top: 300px;"></div>
 		<div class="characterItemContainerMetaData" style="right: 50px; top: 440px;"></div>
 		<div class="characterItemContainer itemContainer" style="right: 200px; top: 440px;"></div>
+	</div>
+	<div id="characterScreen" class="function" style="display:none; height: 52rem; width:70rem;">
+		<div style="margin-top: 10px; margin-left: 10px;" class="row">
+			<div class="col">
+				<div style="margin-left:0rem;" class="heroLevel"></div>
+				<div style="margin-left:0rem;" class="heroHP"></div>
+				<div style="margin-left:0rem;" class="heroXP"></div>
+				<div style="margin-left:0rem;" class="heroMana"></div>
+				<div style="margin-left:0rem;" class="heroMoney"></div>
+				<div class="row activeHero">
+				</div>
+			</div>
+			<div class="col bag">				
+				<div class="bagItems"></div>
+			</div>
+		</div>
 	</div>	
 	<div id="deathScreenTextOverlay" class="function" style="display:none; width: 760px; height: 68px; font-size: 20px;"></div>
 	<div id="trasureScreenTextOverlay" class="container overlay" style="display:none; color:#fdf75a; background-color: #1f1907a6; top:5rem; position: absolute;">

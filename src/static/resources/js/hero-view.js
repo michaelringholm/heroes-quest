@@ -19,7 +19,8 @@ function HeroView() {
         if (heroName) {
             data = { userName: gameSession.getUserName(), userGuid: gameSession.getUserGuid(), accessToken: gameSession.getAccessToken(), hero: { heroName: heroName } };
             post(_this.CHOOSE_HERO_URL, data, this.chooseHeroSuccess, this.chooseHeroFailed);
-        }	
+        } 
+        else logError("Unable to find character name!");
     };
     
     this.getHeroCardImage = function(hero) {
@@ -83,6 +84,17 @@ function HeroView() {
     var createHeroFailed = function(errorMsg) {
         logInfo(errorMsg);
     };
+
+    this.addHeroCard = function(hero) {
+        var newHeroCard = $(".hero-card.template").clone();
+        newHeroCard.removeClass("template");
+        $(newHeroCard).find(".hero-name").html(hero.heroName);
+        $(newHeroCard).find(".hero-text").html(hero.heroClass);
+        $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero));
+        //$(newHeroCard).find(".card").attr("data-hero-name", hero.heroName);
+        $(newHeroCard).attr("data-hero-name", hero.heroName);
+        return newHeroCard;
+    };    
 
     this.drawCreateHeroScreen = function() {
         $(".function").hide();

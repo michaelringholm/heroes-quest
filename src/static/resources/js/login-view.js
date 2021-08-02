@@ -49,13 +49,14 @@ function LoginView() {
         soundPlayer.stop(welcomeMusic);
     };
 
-    var addHeroCard = function(hero) {
+    var addHeroCard2 = function(hero) {
         var newHeroCard = $(".hero-card.template").clone();
         newHeroCard.removeClass("template");
         $(newHeroCard).find(".hero-name").html(hero.heroName);
         $(newHeroCard).find(".hero-text").html(hero.heroClass);
         $(newHeroCard).find(".card-img-top").attr("src", heroView.getHeroCardImage(hero));
-        $(newHeroCard).find(".card").attr("data-hero-name", hero.heroName);
+        //$(newHeroCard).find(".card").attr("data-hero-name", hero.heroName);
+        $(newHeroCard).attr("data-hero-name", hero.heroName);
         return newHeroCard;
     };
 
@@ -83,12 +84,12 @@ function LoginView() {
         for(var heroIndex in heroes) {
             if(heroIndex > maxHeroes-1)
                 break;
-            var heroCard = addHeroCard(heroes[heroIndex], heroIndex);
+            var heroCard = heroView.addHeroCard(heroes[heroIndex], heroIndex);
             $(".heroes").append(heroCard);
         }
         if(heroes == null) addEmptyCards(maxHeroes);
         else if(heroes.length < maxHeroes) addEmptyCards(maxHeroes-heroes.length);
-        $(".card").click(function() {heroView.chooseHero(this);});
+        $(".hero-card").click(function() {heroView.chooseHero(this);});
         $("#loginBottomToolbar").show();
         $("#topToolbar").show();
     };

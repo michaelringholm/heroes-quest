@@ -99,15 +99,19 @@ function printJson(json) {
 
 function logDebug(msg) {
 	$("#debugInfo").prepend("[DEBUG]: " + msg + "<br/>");
+	console.log("[DEBUG]: " + msg);
+	console.log("[DEBUG]: " + new Error().stack);
 } 
 
 function logInfo(msg) {
 	$("#debugInfo").prepend("[INFO]: " + msg + "<br/>");
+	console.log("[INFO]: " + msg);
+	console.log("[INFO]: " + new Error("INFO STACK").stack);
 } 
 
 function logError(msg) {
 	$("#debugInfo").prepend("[ERROR]: " + msg + "<br/>");
-	console.error(msg);
+	console.error("[ERROR]: " + msg);
 }  
 
 function post(apiUrl, data, fnSuccess, fnError) {	

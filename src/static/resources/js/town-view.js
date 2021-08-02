@@ -203,50 +203,49 @@ function TownView() {
     };
 
     this.drawCharacterSheet = function(hero) {
-        $(".function").hide();
-        $(".overlay").hide();
-        $(canvasLayer2).hide();
-        $(canvasLayer1).hide();
-        //$("#characterScreenOverlay").show();
-        $("#characterScreen").show();
-        $("#townBottomToolbar").show();
-        
+        logDebug("townView.drawCharacterSheet() called!");
+        $(".function").hide();$(".overlay").hide();$(canvasLayer2).hide();$(canvasLayer1).hide();
+        $("#characterScreen").show();$("#townBottomToolbar").show();
         $("#container").css("background-image", "url('./resources/images/character-sheet-background.jpg')"); 	
         $("#characterScreenOverlay").html("This is the character screen!<br/>");
         //$("#characterScreenOverlay").append("The smith has around " + smithy.copper + " copper pieces!<br/>");
+
+        var heroCard = heroView.addHeroCard(hero);
+        $(".activeHero").append(heroCard);
         
         $(".heroName").html("Name:" + hero.heroName);
         $(".heroLevel").html("Level:" + hero.level);
-        $(".heroHP").html("HP:" + hero.hp);
+        $(".heroXP").html("XP:" + hero.xp);
+        $(".heroHP").html("HP:" + hero.hp + "/" + hero.baseHp);
+        $(".heroMana").html("Mana:" + hero.mana + "/" + hero.baseMana);        
         $(".heroMoney").html("Copper:" + hero.copper);
             
         for(var itemIndex in hero.items) {
             var name = hero.items[itemIndex].name;
             var itemImgUrl = "./resources/images/items/StoneHatchet_Icon.png";
             
-            if(name == "long sword")
-                itemImgUrl = "./resources/images/items/StoneHatchet_Icon.png";
-            else if(name == "wooden sword")
-                itemImgUrl = "./resources/images/items/the_axe_in_the_basement.png";
-            else if(name == "silver long sword")
-                itemImgUrl = "./resources/images/items/128px-Wooden_Shield.png";
-            else if(name == "rabbits foot")
-                itemImgUrl = "./resources/images/items/rabbits-foot.png";
-            else if(name == "deer skin")
-                itemImgUrl = "./resources/images/items/deer-skin.png";
-            else if(name == "beetle shell")
-                itemImgUrl = "./resources/images/items/beetle-shell.png";				
+            if(name == "long sword") itemImgUrl = "./resources/images/items/StoneHatchet_Icon.png";
+            else if(name == "wooden sword") itemImgUrl = "./resources/images/items/the_axe_in_the_basement.png";
+            else if(name == "silver long sword") itemImgUrl = "./resources/images/items/128px-Wooden_Shield.png";
+            else if(name == "rabbits foot") itemImgUrl = "./resources/images/items/rabbits-foot.png";
+            else if(name == "deer skin") itemImgUrl = "./resources/images/items/deer-skin.png";
+            else if(name == "beetle shell") itemImgUrl = "./resources/images/items/beetle-shell.png";				
             
-            $(".characterItemContainer:eq(" + itemIndex + ")").html('<img src="' + itemImgUrl + '" alt="' + name + '" title="' + name + '" style="height: 64px; width: 64px; position: absolute; top:6px; left: 6px;" />');
-            
+            var left="0px";
+            if (itemIndex > 5) left="140px";
+            if (itemIndex > 10) left="280px";
+            if (itemIndex > 15) break;
+            //$(".characterItemContainer:eq(" + itemIndex + ")").html('<img src="' + itemImgUrl + '" alt="' + name + '" title="' + name + '" style="height: 64px; width: 64px; position: absolute; top:6px; left: 6px;" />');            
+            //$(".characterItemContainerMetaData:eq(" + itemIndex + ")").html(name + '<br>Value: ' + value + ' cp');            
             var value = hero.items[itemIndex].value;
             if(!hero.items[itemIndex].value) value = 0;
-            $(".characterItemContainerMetaData:eq(" + itemIndex + ")").html(name + '<br>Value: ' + value + ' cp');
-            
-            // Maximum of 6 items
-            if (itemIndex > 5) {
-                break;
-            }
+            var bagItem = $(".bagItem.template").clone();
+            bagItem.removeClass("template");
+            bagItem.find(".characterItemContainerMetaData").html(name);
+            bagItem.find(".characterItemContainer").attr("src", itemImgUrl);
+            bagItem.find(".characterItemContainer").attr("left", left);
+            $(".bagItems").append(bagItem);
+            // Maximum of 6 items            
         }
     };
     
